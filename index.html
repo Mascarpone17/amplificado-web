@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Amplificado</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" />
+<style>
+  :root{
+    --bg:#F6F0E3;
+    --surface:#FFFDF8;
+    --surface-2:#EFE3C9;
+    --ink:#221C17;
+    --ink-muted:#6E6152;
+    --accent:#FF6A13;
+    --accent-strong:#E85A00;
+    --accent-ink:#FFFFFF;
+    --gold:#96631E;
+    --line:#E1D2AF;
+    --stage:#EFE6D2;
+    --danger:#B3261E;
+    --shadow:0 1px 2px rgba(34,28,23,.08),0 10px 26px -14px rgba(34,28,23,.28);
+    --font-display:'Oswald','Arial Narrow',sans-serif;
+    --font-body:'Public Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --font-mono:'IBM Plex Mono','SFMono-Regular',Consolas,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#151009; --surface:#1E170F; --surface-2:#291F14; --ink:#F3EBDC; --ink-muted:#AC9D84;
+      --accent:#FF7A2E; --accent-strong:#FF9147; --accent-ink:#1B1108; --gold:#E8A33D; --line:#392C1D;
+      --danger:#FF8A80;
+      --shadow:0 1px 2px rgba(0,0,0,.5),0 14px 30px -16px rgba(0,0,0,.65);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#151009; --surface:#1E170F; --surface-2:#291F14; --ink:#F3EBDC; --ink-muted:#AC9D84;
+    --accent:#FF7A2E; --accent-strong:#FF9147; --accent-ink:#1B1108; --gold:#E8A33D; --line:#392C1D;
+    --danger:#FF8A80;
+    --shadow:0 1px 2px rgba(0,0,0,.5),0 14px 30px -16px rgba(0,0,0,.65);
+  }
+
+  *{box-sizing:border-box;}
+  html{background:var(--bg);}
+  body{
+    background:var(--bg); color:var(--ink); font-family:var(--font-body);
+    font-size:16px; line-height:1.5; padding-inline:20px; margin:0;
+  }
+  h1,h2,h3,.brand,.price-lg{font-family:var(--font-display);text-transform:uppercase;letter-spacing:.02em;text-wrap:balance;}
+  .mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums;}
+  a{color:inherit;}
+  button{font:inherit;color:inherit;}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:3px;}
+  [hidden]{display:none!important;}
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important;}
+  }
+
+  #app{max-width:1120px;margin-inline:auto;}
+  #boot{min-height:100dvh;display:flex;align-items:center;justify-content:center;color:var(--ink-muted);font-family:var(--font-mono);font-size:14px;}
+
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;gap:16px;
+    padding-block:18px;border-bottom:1px solid var(--line);margin-bottom:32px;
+  }
+  .brand{font-size:20px;font-weight:700;letter-spacing:.08em;background:none;border:none;cursor:pointer;padding:0;color:var(--ink);display:flex;align-items:center;gap:8px;}
+  .brand::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px rgba(255,106,19,.25);}
+  .topbar-actions{display:flex;align-items:center;gap:14px;}
+  .user-chip{font-family:var(--font-mono);font-size:13px;color:var(--ink-muted);}
+  .logout-btn{background:none;border:1px solid var(--line);border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;color:var(--ink-muted);}
+  .logout-btn:hover{border-color:var(--accent);color:var(--ink);}
+
+  .view-login{
+    min-height:calc(100dvh - 40px);display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;position:relative;padding-block:48px;
+  }
+  .login-glow{position:absolute;inset:0;background:radial-gradient(ellipse 60% 45% at 50% 30%, rgba(255,106,19,.22), transparent 70%);pointer-events:none;z-index:0;}
+  .login-inner{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;max-width:420px;width:100%;}
+  .login-mark{font-size:clamp(40px,9vw,64px);font-weight:700;letter-spacing:.04em;margin:0;color:var(--ink);}
+  .login-mark em{font-style:normal;color:var(--accent);}
+  .login-tagline{color:var(--ink-muted);font-size:17px;margin-block:10px 28px;max-width:32ch;}
+
+  .auth-tabs{display:flex;gap:6px;background:var(--surface-2);border-radius:10px;padding:4px;width:100%;margin-bottom:16px;}
+  .auth-tab{flex:1;background:none;border:none;border-radius:7px;padding:9px 0;font-size:13.5px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;cursor:pointer;color:var(--ink-muted);}
+  .auth-tab[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow);}
+
+  .login-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:28px;width:100%;box-shadow:var(--shadow);text-align:left;}
+  .field{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
+  .field label{font-size:13px;font-weight:600;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.06em;}
+  .field input{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:11px 13px;font-size:15px;color:var(--ink);font-family:var(--font-body);width:100%;}
+  .field input::placeholder{color:var(--ink-muted);opacity:.7;}
+  .field input:focus{outline:2px solid var(--accent);outline-offset:1px;}
+  .field-hint{font-size:12px;color:var(--ink-muted);margin-top:2px;}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:var(--accent-ink);border:none;border-radius:8px;padding:12px 20px;font-weight:600;font-size:15px;cursor:pointer;width:100%;transition:background-color .15s ease, transform .1s ease;}
+  .btn:hover{background:var(--accent-strong);}
+  .btn:active{transform:translateY(1px);}
+  .btn:disabled{opacity:.6;cursor:default;}
+  .btn-ghost{background:transparent;color:var(--ink);border:1px solid var(--line);width:auto;padding:9px 16px;font-size:14px;}
+  .btn-ghost:hover{background:var(--surface-2);}
+  .btn-link{background:none;border:none;color:var(--accent);font-size:13px;font-weight:600;cursor:pointer;padding:0;width:auto;text-decoration:underline;text-underline-offset:2px;}
+
+  .login-hint{font-size:13px;color:var(--ink-muted);margin-top:14px;text-align:center;}
+  .login-error{color:var(--danger);font-size:13px;margin:-6px 0 14px;min-height:1em;}
+  .login-notice{color:var(--gold);font-size:13px;margin:-6px 0 14px;min-height:1em;}
+  .auth-footer-row{display:flex;justify-content:center;margin-top:14px;}
+
+  .catalog-head{margin-bottom:24px;}
+  .catalog-head h1{font-size:clamp(28px,4vw,38px);margin:0 0 6px;}
+  .catalog-sub{color:var(--ink-muted);margin:0 0 20px;}
+  .filters{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{border:1px solid var(--line);background:var(--surface);color:var(--ink-muted);border-radius:999px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;letter-spacing:.02em;}
+  .chip:hover{border-color:var(--accent);color:var(--ink);}
+  .chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:20px;margin-block:28px 56px;}
+  .card{text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;box-shadow:var(--shadow);transition:transform .15s ease, border-color .15s ease;}
+  .card:hover{transform:translateY(-3px);border-color:var(--accent);}
+  .card-art{aspect-ratio:4/3;background:var(--stage);position:relative;display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--line);overflow:hidden;}
+  .card-art img{width:auto;height:104%;max-width:88%;object-fit:contain;filter:drop-shadow(0 10px 14px rgba(20,14,8,.22));}
+  .fav-toggle{position:absolute;top:10px;right:10px;background:rgba(255,253,248,.85);border:1px solid var(--line);border-radius:999px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;color:var(--ink-muted);}
+  .fav-toggle[data-fav="true"]{color:var(--accent);}
+  .card-body{padding:16px;display:flex;flex-direction:column;gap:6px;flex:1;}
+  .card-tags{display:flex;align-items:center;gap:8px;}
+  .card-family{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);}
+  .tier-pill{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--ink-muted);}
+  .tier-pill[data-tier="Profesional"]{color:var(--accent);border-color:var(--accent);}
+  .detail-tier{margin-left:10px;}
+  .card-name{font-family:var(--font-display);font-size:19px;text-transform:none;letter-spacing:0;margin:0;}
+  .card-blurb{font-size:13.5px;color:var(--ink-muted);flex:1;margin:0;}
+  .card-foot{display:flex;align-items:center;justify-content:space-between;margin-top:8px;}
+  .card-price{font-family:var(--font-mono);font-weight:600;font-size:16px;}
+  .card-cta{font-size:13px;color:var(--accent);font-weight:600;}
+  .empty-state{color:var(--ink-muted);padding:40px 0;text-align:center;}
+
+  .back-btn{background:none;border:none;color:var(--ink-muted);font-size:14px;cursor:pointer;padding:0;margin-bottom:20px;font-weight:600;}
+  .back-btn:hover{color:var(--accent);}
+  .detail{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:40px;margin-bottom:64px;align-items:start;}
+  @media (max-width:760px){.detail{grid-template-columns:1fr;}}
+  .detail-art{background:var(--stage);border:1px solid var(--line);border-radius:16px;display:flex;align-items:center;justify-content:center;padding:20px;position:sticky;top:20px;overflow:hidden;}
+  .detail-art img{width:auto;height:min(58vh,500px);max-width:100%;object-fit:contain;filter:drop-shadow(0 16px 20px rgba(20,14,8,.25));}
+  .detail-family{color:var(--gold);font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;}
+  .detail-name{font-size:clamp(26px,4vw,36px);margin:6px 0 4px;}
+  .detail-finish{color:var(--ink-muted);margin:0 0 18px;font-size:15px;}
+  .detail-price{font-family:var(--font-mono);font-size:28px;font-weight:600;margin-bottom:18px;}
+  .detail-blurb{max-width:60ch;color:var(--ink);margin-bottom:26px;font-size:16px;}
+  .spec-table{width:100%;border-collapse:collapse;margin-bottom:26px;}
+  .spec-table tr{border-top:1px solid var(--line);}
+  .spec-table tr:first-child{border-top:none;}
+  .spec-table th,.spec-table td{text-align:left;padding:10px 0;font-size:14.5px;vertical-align:top;}
+  .spec-table th{color:var(--ink-muted);font-weight:600;width:38%;}
+  .spec-table td{font-family:var(--font-mono);}
+  .detail-actions{display:flex;flex-wrap:wrap;gap:10px;}
+  .detail-actions .btn{width:auto;}
+
+  footer{color:var(--ink-muted);font-size:12.5px;text-align:center;padding-block:24px 40px;border-top:1px solid var(--line);}
+  footer p{max-width:64ch;margin-inline:auto;}
+  footer .credits{margin-top:8px;font-size:11.5px;line-height:1.7;}
+  footer a{text-decoration:underline;text-underline-offset:2px;}
+</style>
+</head>
+<body>
+
+<div id="boot">Cargando…</div>
+
+<div id="app" hidden>
+  <header class="topbar" id="topbar" hidden>
+    <button class="brand" id="brandBtn" type="button">AMPLIFICADO</button>
+    <div class="topbar-actions">
+      <span class="user-chip mono" id="userChip"></span>
+      <button class="logout-btn" id="logoutBtn" type="button">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="view view-login" id="view-login">
+      <div class="login-glow"></div>
+      <div class="login-inner">
+        <p class="login-mark">AMPLIFIC<em>A</em>DO</p>
+        <p class="login-tagline">Guitarras eléctricas para cada escenario, del garage al foco principal.</p>
+
+        <div class="auth-tabs" role="tablist">
+          <button class="auth-tab" id="tabLogin" type="button" role="tab" aria-selected="true">Iniciar sesión</button>
+          <button class="auth-tab" id="tabSignup" type="button" role="tab" aria-selected="false">Crear cuenta</button>
+        </div>
+
+        <form class="login-card" id="authForm" novalidate>
+          <div class="field">
+            <label for="emailField">Email</label>
+            <input id="emailField" name="email" type="email" placeholder="tu@email.com" autocomplete="email" required />
+          </div>
+          <div class="field">
+            <label for="passField">Contraseña</label>
+            <input id="passField" name="password" type="password" placeholder="••••••••" autocomplete="current-password" required minlength="6" />
+            <span class="field-hint" id="passHint" hidden>Mínimo 6 caracteres.</span>
+          </div>
+          <p class="login-error" id="authError" role="alert" aria-live="polite"></p>
+          <p class="login-notice" id="authNotice" role="status" aria-live="polite"></p>
+          <button class="btn" type="submit" id="authSubmit">Entrar al catálogo</button>
+          <div class="auth-footer-row">
+            <button class="btn-link" type="button" id="forgotBtn">¿Olvidaste tu contraseña?</button>
+          </div>
+        </form>
+        <p class="login-hint">Tu cuenta y contraseña se manejan con Firebase Authentication.</p>
+      </div>
+    </section>
+
+    <section class="view" id="view-catalog" hidden>
+      <div class="catalog-head">
+        <h1>Catálogo</h1>
+        <p class="catalog-sub mono" id="catalogCount"></p>
+        <div class="filters" id="filters"></div>
+      </div>
+      <div class="grid" id="grid"></div>
+    </section>
+
+    <section class="view" id="view-detail" hidden>
+      <button class="back-btn" id="backBtn" type="button">← Volver al catálogo</button>
+      <div class="detail" id="detailContent"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Amplificado — catálogo de demostración. Los nombres de modelo, precios y especificaciones son de ejemplo; las fotografías corresponden a instrumentos reales usados como referencia visual de cada familia.</p>
+    <p class="credits">
+      Fotos vía Wikimedia Commons, cortesía de Auge=mit y colaboradores (CC BY-SA 2.5 / 3.0 / 4.0, CC BY 2.0):
+      <a href="https://commons.wikimedia.org/wiki/File:Fender_Stratocaster_Relic_FCS_AvR.png" target="_blank" rel="noopener">Stratocaster</a> ·
+      <a href="https://commons.wikimedia.org/wiki/File:Epiphone_Limited_Edition_Joe_Bonamassa_Les_Paul_Standard_noBG.png" target="_blank" rel="noopener">Les Paul</a> ·
+      <a href="https://commons.wikimedia.org/wiki/File:Peavey_Generation_EXP_Telecaster_Custom_2007.jpg" target="_blank" rel="noopener">Telecaster</a> ·
+      <a href="https://commons.wikimedia.org/wiki/File:Gibson_Flying_V_Classic_White_noBG.png" target="_blank" rel="noopener">Flying V</a> ·
+      <a href="https://commons.wikimedia.org/wiki/File:Gibson-Explorer_noBG.png" target="_blank" rel="noopener">Explorer</a> ·
+      <a href="https://commons.wikimedia.org/wiki/File:Gibson_ES_335_64_GCS_AvR.png" target="_blank" rel="noopener">Semihueca</a>
+    </p>
+  </footer>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="catalog-data.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  // ---- auth error messages ----
+  var AUTH_ERRORS = {
+    "auth/email-already-in-use":"Ese email ya tiene una cuenta. Probá iniciar sesión.",
+    "auth/invalid-email":"El email no es válido.",
+    "auth/weak-password":"La contraseña debe tener al menos 6 caracteres.",
+    "auth/user-not-found":"Email o contraseña incorrectos.",
+    "auth/wrong-password":"Email o contraseña incorrectos.",
+    "auth/invalid-credential":"Email o contraseña incorrectos.",
+    "auth/invalid-login-credentials":"Email o contraseña incorrectos.",
+    "auth/too-many-requests":"Demasiados intentos. Probá de nuevo en unos minutos.",
+    "auth/network-request-failed":"Error de conexión. Revisá tu internet e intentá de nuevo.",
+    "auth/missing-password":"Ingresá una contraseña."
+  };
+  function authErrorMessage(err){
+    return AUTH_ERRORS[err && err.code] || "Ocurrió un error. Probá de nuevo.";
+  }
+
+  var boot = document.getElementById("boot");
+  var app = document.getElementById("app");
+  var topbar = document.getElementById("topbar");
+  var brandBtn = document.getElementById("brandBtn");
+  var userChip = document.getElementById("userChip");
+  var logoutBtn = document.getElementById("logoutBtn");
+  var views = {
+    login: document.getElementById("view-login"),
+    catalog: document.getElementById("view-catalog"),
+    detail: document.getElementById("view-detail")
+  };
+
+  function showView(name){
+    Object.keys(views).forEach(function(k){ views[k].hidden = (k !== name); });
+    topbar.hidden = (name === "login");
+    window.scrollTo(0,0);
+  }
+
+  // ---- auth form (login / signup tabs) ----
+  var tabLogin = document.getElementById("tabLogin");
+  var tabSignup = document.getElementById("tabSignup");
+  var authForm = document.getElementById("authForm");
+  var authSubmit = document.getElementById("authSubmit");
+  var authError = document.getElementById("authError");
+  var authNotice = document.getElementById("authNotice");
+  var passHint = document.getElementById("passHint");
+  var forgotBtn = document.getElementById("forgotBtn");
+  var mode = "login";
+
+  function setMode(next){
+    mode = next;
+    tabLogin.setAttribute("aria-selected", String(mode === "login"));
+    tabSignup.setAttribute("aria-selected", String(mode === "signup"));
+    authSubmit.textContent = mode === "login" ? "Entrar al catálogo" : "Crear cuenta";
+    passHint.hidden = mode === "login";
+    authError.textContent = "";
+    authNotice.textContent = "";
+  }
+  tabLogin.addEventListener("click", function(){ setMode("login"); });
+  tabSignup.addEventListener("click", function(){ setMode("signup"); });
+
+  authForm.addEventListener("submit", function(e){
+    e.preventDefault();
+    var email = document.getElementById("emailField").value.trim();
+    var pass = document.getElementById("passField").value;
+    authError.textContent = "";
+    authNotice.textContent = "";
+    if(!email || !pass){
+      authError.textContent = "Completá email y contraseña.";
+      return;
+    }
+    authSubmit.disabled = true;
+    var action = mode === "login"
+      ? firebase.auth().signInWithEmailAndPassword(email, pass)
+      : firebase.auth().createUserWithEmailAndPassword(email, pass);
+    action.catch(function(err){
+      authError.textContent = authErrorMessage(err);
+    }).finally(function(){
+      authSubmit.disabled = false;
+    });
+  });
+
+  forgotBtn.addEventListener("click", function(){
+    var email = document.getElementById("emailField").value.trim();
+    authError.textContent = "";
+    authNotice.textContent = "";
+    if(!email){
+      authError.textContent = "Escribí tu email arriba y volvé a tocar este link.";
+      return;
+    }
+    firebase.auth().sendPasswordResetEmail(email).then(function(){
+      authNotice.textContent = "Te enviamos un email para restablecer tu contraseña.";
+    }).catch(function(err){
+      authError.textContent = authErrorMessage(err);
+    });
+  });
+
+  logoutBtn.addEventListener("click", function(){
+    firebase.auth().signOut();
+  });
+
+  brandBtn.addEventListener("click", function(){
+    renderGrid();
+    showView("catalog");
+  });
+
+  firebase.auth().onAuthStateChanged(function(user){
+    boot.hidden = true;
+    app.hidden = false;
+    if(user){
+      userChip.textContent = user.email;
+      renderFilters();
+      renderGrid();
+      showView("catalog");
+    } else {
+      showView("login");
+    }
+  });
+
+  // ---- catalog ----
+  var favorites = loadFavorites();
+  function loadFavorites(){
+    try{
+      var raw = localStorage.getItem("amplificado_favoritos");
+      return raw ? JSON.parse(raw) : [];
+    }catch(e){ return []; }
+  }
+  function saveFavorites(){
+    try{ localStorage.setItem("amplificado_favoritos", JSON.stringify(favorites)); }catch(e){}
+  }
+  function toggleFavorite(id){
+    var idx = favorites.indexOf(id);
+    if(idx === -1) favorites.push(id); else favorites.splice(idx,1);
+    saveFavorites();
+  }
+
+  var PHOTO_BY_SHAPE = {
+    strat:"img/strat.png", lp:"img/lp.png", tele:"img/tele.jpg",
+    v:"img/v.png", explorer:"img/explorer.png", semihollow:"img/semihollow.png"
+  };
+  function artImg(g){
+    return '<img src="' + PHOTO_BY_SHAPE[g.shape] + '" alt="' + g.name + ', ' + g.family + ' ' + g.acabado + '" loading="lazy" />';
+  }
+
+  var state = { family:"all", activeId:null };
+  var filtersEl = document.getElementById("filters");
+  var gridEl = document.getElementById("grid");
+  var countEl = document.getElementById("catalogCount");
+
+  function families(){
+    var seen = [], list = [];
+    guitars.forEach(function(g){
+      if(seen.indexOf(g.family) === -1){ seen.push(g.family); list.push(g.family); }
+    });
+    return list;
+  }
+
+  function renderFilters(){
+    var chips = ["all"].concat(families());
+    filtersEl.innerHTML = chips.map(function(f){
+      var label = f === "all" ? "Todas" : f;
+      var pressed = state.family === f;
+      return '<button type="button" class="chip" data-family="' + f + '" aria-pressed="' + pressed + '">' + label + '</button>';
+    }).join("");
+    Array.prototype.forEach.call(filtersEl.querySelectorAll(".chip"), function(btn){
+      btn.addEventListener("click", function(){
+        state.family = btn.getAttribute("data-family");
+        renderFilters();
+        renderGrid();
+      });
+    });
+  }
+
+  function renderGrid(){
+    var list = guitars.filter(function(g){ return state.family === "all" || g.family === state.family; });
+    countEl.textContent = list.length + (list.length === 1 ? " modelo disponible" : " modelos disponibles");
+    if(list.length === 0){
+      gridEl.innerHTML = '<p class="empty-state">No hay modelos en esta categoría todavía.</p>';
+      return;
+    }
+    gridEl.innerHTML = list.map(function(g){
+      var isFav = favorites.indexOf(g.id) !== -1;
+      return '' +
+        '<article class="card" data-id="' + g.id + '" tabindex="0" role="button" aria-label="Ver ficha de ' + g.name + '">' +
+          '<div class="card-art">' +
+            artImg(g) +
+            '<button type="button" class="fav-toggle" data-fav-id="' + g.id + '" data-fav="' + isFav + '" aria-label="Marcar ' + g.name + ' como favorita" aria-pressed="' + isFav + '">' + (isFav ? "★" : "☆") + '</button>' +
+          '</div>' +
+          '<div class="card-body">' +
+            '<div class="card-tags">' +
+              '<span class="card-family">' + g.family + '</span>' +
+              '<span class="tier-pill" data-tier="' + g.nivel + '">' + g.nivel + '</span>' +
+            '</div>' +
+            '<h3 class="card-name">' + g.name + '</h3>' +
+            '<p class="card-blurb">' + g.blurb + '</p>' +
+            '<div class="card-foot">' +
+              '<span class="card-price mono">$' + g.price.toLocaleString("es-AR") + '</span>' +
+              '<span class="card-cta">Ver ficha →</span>' +
+            '</div>' +
+          '</div>' +
+        '</article>';
+    }).join("");
+
+    Array.prototype.forEach.call(gridEl.querySelectorAll(".card"), function(card){
+      card.addEventListener("click", function(e){
+        if(e.target.closest(".fav-toggle")) return;
+        openDetail(card.getAttribute("data-id"));
+      });
+      card.addEventListener("keydown", function(e){
+        if((e.key === "Enter" || e.key === " ") && !e.target.closest(".fav-toggle")){
+          e.preventDefault();
+          openDetail(card.getAttribute("data-id"));
+        }
+      });
+    });
+    Array.prototype.forEach.call(gridEl.querySelectorAll(".fav-toggle"), function(btn){
+      btn.addEventListener("click", function(e){
+        e.stopPropagation();
+        var id = btn.getAttribute("data-fav-id");
+        toggleFavorite(id);
+        renderGrid();
+      });
+    });
+  }
+
+  var detailContent = document.getElementById("detailContent");
+  var backBtn = document.getElementById("backBtn");
+  backBtn.addEventListener("click", function(){ renderGrid(); showView("catalog"); });
+
+  function openDetail(id){
+    var g = guitars.filter(function(x){ return x.id === id; })[0];
+    if(!g) return;
+    state.activeId = id;
+    var isFav = favorites.indexOf(id) !== -1;
+    var rows = [
+      ["Cuerpo", g.cuerpo], ["Mástil", g.mastil], ["Diapasón", g.diapason],
+      ["Pastillas", g.pastillas], ["Puente", g.puente], ["Escala", g.escala],
+      ["Trastes", g.trastes], ["Acabado", g.acabado]
+    ];
+    detailContent.innerHTML = '' +
+      '<div class="detail-art">' + artImg(g) + '</div>' +
+      '<div class="detail-info">' +
+        '<span class="detail-family">' + g.family + '<span class="tier-pill detail-tier" data-tier="' + g.nivel + '">' + g.nivel + '</span></span>' +
+        '<h1 class="detail-name">' + g.name + '</h1>' +
+        '<p class="detail-finish">' + g.acabado + '</p>' +
+        '<p class="detail-price mono">$' + g.price.toLocaleString("es-AR") + '</p>' +
+        '<p class="detail-blurb">' + g.blurb + '</p>' +
+        '<table class="spec-table">' +
+          rows.map(function(r){ return '<tr><th>' + r[0] + '</th><td>' + r[1] + '</td></tr>'; }).join("") +
+        '</table>' +
+        '<div class="detail-actions">' +
+          '<button type="button" class="btn btn-ghost" id="favBtn" aria-pressed="' + isFav + '">' + (isFav ? "★ En favoritos" : "☆ Guardar en favoritos") + '</button>' +
+        '</div>' +
+      '</div>';
+    document.getElementById("favBtn").addEventListener("click", function(){
+      toggleFavorite(id);
+      openDetail(id);
+    });
+    showView("detail");
+  }
+})();
+</script>
+</body>
+</html>
