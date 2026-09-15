@@ -63,6 +63,8 @@
   var boot = document.getElementById("boot");
   var app = document.getElementById("app");
   var topbar = document.getElementById("topbar");
+  var bottomNav = document.getElementById("bottomNav");
+  var bottomProfileLink = document.getElementById("bottomProfileLink");
   var brandBtn = document.getElementById("brandBtn");
   var userChip = document.getElementById("userChip");
   var ownAvatarSlot = document.getElementById("ownAvatarSlot");
@@ -88,6 +90,7 @@
   function showView(name){
     Object.keys(views).forEach(function(k){ views[k].hidden = (k !== name); });
     topbar.hidden = (name === "login");
+    bottomNav.hidden = (name === "login");
     Array.prototype.forEach.call(document.querySelectorAll(".navlinks a"), function(a){
       a.classList.toggle("active", a.getAttribute("data-route") === name);
     });
@@ -116,6 +119,7 @@
   function renderTopbarUser(){
     userChip.textContent = (myProfile && myProfile.displayName) || (currentUser && currentUser.email) || "";
     ownAvatarSlot.innerHTML = avatarHtml(myProfile, "sm");
+    if(currentUser) bottomProfileLink.href = "#/profile/" + currentUser.uid;
   }
 
   // ---------------------------------------------------------------------
