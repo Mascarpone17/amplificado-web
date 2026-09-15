@@ -146,7 +146,10 @@
   .btn-ghost:hover{background:var(--surface-2);border-color:var(--accent);}
   .btn-sm{width:auto;padding:8px 14px;font-size:11.5px;}
   .btn-link{background:none;border:none;color:var(--accent);font-size:13px;font-weight:600;cursor:pointer;padding:0;width:auto;text-decoration:underline;text-underline-offset:2px;font-family:var(--font-body);text-transform:none;letter-spacing:0;}
-  .btn-danger-ghost{background:transparent;color:var(--danger);border:1px solid var(--line);width:auto;padding:6px 10px;font-size:12.5px;}
+  .btn-danger-ghost{background:transparent;color:var(--danger);border:1px solid var(--danger);border-radius:6px;width:auto;padding:8px 14px;font-family:var(--font-mono);font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;cursor:pointer;}
+  .btn-danger-ghost:hover{background:var(--danger);color:var(--accent-ink);}
+
+  .verified-badge{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:var(--gold);color:var(--accent-ink);font-size:9px;line-height:1;flex-shrink:0;margin-left:4px;vertical-align:middle;}
 
   .login-hint{font-size:13px;color:var(--ink-muted);margin-top:14px;text-align:center;}
   .login-error{color:var(--danger);font-size:13px;margin:-6px 0 14px;min-height:1em;}
@@ -227,6 +230,7 @@
   .profile-actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
   .profile-actions .btn{width:auto;}
   .section-label{font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);margin:32px 0 4px;}
+  .form-section-label{display:block;font-size:13px;font-weight:600;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.06em;margin:22px 0 2px;}
 
   .avatar-upload{display:flex;align-items:center;gap:16px;margin-bottom:18px;}
   .avatar-upload .field{margin:0;flex:1;}
@@ -239,6 +243,23 @@
   .pin-toggle[data-armed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);}
   .pin-toggle[data-pinned="true"]:not([data-armed="true"]){border-color:var(--gold);color:var(--gold);}
   .row-remove{background:none;border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-size:13px;cursor:pointer;color:var(--danger);width:auto;}
+  .spec-row.cols-2{grid-template-columns:1fr 1fr auto;}
+  .spec-row.cols-show{grid-template-columns:150px 1fr 1fr auto;}
+  @media (max-width:600px){.spec-row.cols-2,.spec-row.cols-show{grid-template-columns:1fr 1fr;}}
+
+  .band-links{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:22px;}
+  .band-link{display:inline-flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px 14px;font-family:var(--font-mono);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;text-decoration:none;color:var(--ink);}
+  .band-link:hover{border-color:var(--accent);color:var(--accent);}
+  .band-members{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:22px;}
+  .band-member{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:5px 14px 5px 5px;font-size:13.5px;}
+  .band-member a{text-decoration:none;font-weight:600;}
+  .band-member a:hover{color:var(--accent);}
+  .show-list{display:flex;flex-direction:column;gap:10px;margin-bottom:26px;}
+  .show-item{display:flex;align-items:center;gap:16px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;flex-wrap:wrap;}
+  .show-date{font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--gold);min-width:90px;}
+  .show-info{flex:1;min-width:140px;}
+  .show-location{font-weight:600;font-size:14.5px;}
+  .show-item .btn{width:auto;padding:8px 16px;font-size:12px;}
   .photo-preview-wrap{margin-bottom:18px;}
   .photo-preview-wrap .hotspot-stage{max-width:420px;cursor:crosshair;}
   .pin-hint{font-size:12.5px;color:var(--ink-muted);margin:8px 0 0;}
@@ -290,6 +311,7 @@
     </button>
     <nav class="navlinks">
       <a href="#/feed" data-route="feed">Muro</a>
+      <a href="#/bands" data-route="bands">Bandas</a>
       <a href="#/new" data-route="new">Publicar</a>
       <a href="#/chats" data-route="chats">Mensajes</a>
     </nav>
@@ -304,6 +326,7 @@
 
   <nav class="navlinks navlinks-bottom" id="bottomNav" hidden>
     <a href="#/feed" data-route="feed"><span class="tab-icon">⛵</span>Muro</a>
+    <a href="#/bands" data-route="bands"><span class="tab-icon">🎤</span>Bandas</a>
     <a href="#/new" data-route="new"><span class="tab-icon">＋</span>Publicar</a>
     <a href="#/chats" data-route="chats"><span class="tab-icon">✉</span>Mensajes</a>
     <a href="#/feed" data-route="profile" id="bottomProfileLink"><span class="tab-icon">⚓</span>Perfil</a>
@@ -388,13 +411,13 @@
           <textarea id="instDesc" placeholder="Contá la historia del instrumento, cómo suena, por qué lo elegiste…"></textarea>
         </div>
 
-        <label style="font-size:13px;font-weight:600;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.06em;">Especificaciones</label>
+        <label class="form-section-label">Especificaciones</label>
         <p class="field-hint" style="margin:2px 0 12px;">Agregá las que quieras: cuerpo, mástil, diapasón, pastillas, puente, potencia, etc. Después podés anclarlas sobre la foto.</p>
         <div class="specs-editor" id="specsEditor"></div>
         <button type="button" class="btn btn-ghost btn-sm" id="addSpecBtn" style="margin-bottom:18px;">+ Agregar especificación</button>
 
         <div id="pinSection" hidden>
-          <label style="font-size:13px;font-weight:600;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.06em;">Anclar en la foto (opcional)</label>
+          <label class="form-section-label" style="margin-top:0;">Anclar en la foto (opcional)</label>
           <p class="pin-hint">Tocá "📍" junto a una especificación y después hacé clic en el punto de la foto que corresponde (ej. las pastillas, el mástil).</p>
         </div>
 
@@ -455,6 +478,68 @@
     <section class="view" id="view-chat" hidden>
       <button class="back-btn" type="button" data-nav="#/chats">← Volver a mensajes</button>
       <div id="chatContent"></div>
+    </section>
+
+    <section class="view" id="view-bands" hidden>
+      <div class="page-head">
+        <div>
+          <h1>Bandas</h1>
+          <p class="page-sub mono" id="bandsCount"></p>
+        </div>
+        <button class="btn" type="button" data-nav="#/bands/new" style="width:auto;">+ Crear banda</button>
+      </div>
+      <div id="bandsEmpty"></div>
+      <div class="grid" id="bandsGrid"></div>
+    </section>
+
+    <section class="view" id="view-band-new" hidden>
+      <button class="back-btn" type="button" data-nav="#/bands">← Volver a bandas</button>
+      <div class="page-head"><div><h1>Crear banda</h1><p class="page-sub">Armá la página de tu banda o proyecto musical.</p></div></div>
+      <form class="login-card" id="bandForm" novalidate style="max-width:640px;">
+        <div class="field">
+          <label for="bandName">Nombre de la banda</label>
+          <input id="bandName" type="text" placeholder="Ej: Los del Fondo" required />
+        </div>
+        <div class="field">
+          <label for="bandGenre">Qué música tocan</label>
+          <input id="bandGenre" type="text" placeholder="Ej: Rock alternativo, con algo de funk" />
+        </div>
+        <div class="field">
+          <label for="bandPhoto">Foto principal</label>
+          <input id="bandPhoto" type="file" accept="image/*" required />
+        </div>
+        <div class="photo-preview-wrap" id="bandPhotoPreview" hidden></div>
+        <div class="field">
+          <label for="bandDesc">Descripción</label>
+          <textarea id="bandDesc" placeholder="Contá quiénes son, de dónde salieron, qué los define…"></textarea>
+        </div>
+
+        <label class="form-section-label" style="margin-top:0;">Integrantes</label>
+        <p class="field-hint" style="margin:2px 0 12px;">El perfil de Amplificado es opcional: escribí el nombre exacto con el que se registró esa persona para enlazarlo.</p>
+        <div class="specs-editor" id="membersEditor"></div>
+        <button type="button" class="btn btn-ghost btn-sm" id="addMemberBtn" style="margin-bottom:18px;">+ Agregar integrante</button>
+
+        <label class="form-section-label">Redes musicales</label>
+        <p class="field-hint" style="margin:2px 0 12px;">Spotify, Apple Music, YouTube, Bandcamp, lo que tengan.</p>
+        <div class="specs-editor" id="linksEditor"></div>
+        <button type="button" class="btn btn-ghost btn-sm" id="addLinkBtn" style="margin-bottom:18px;">+ Agregar red</button>
+
+        <label class="form-section-label">Próximas fechas</label>
+        <p class="field-hint" style="margin:2px 0 12px;">El link de entradas es opcional.</p>
+        <div class="specs-editor" id="showsEditor"></div>
+        <button type="button" class="btn btn-ghost btn-sm" id="addShowBtn" style="margin-bottom:18px;">+ Agregar fecha</button>
+
+        <p class="login-error" id="bandError" role="alert"></p>
+        <div class="form-actions">
+          <button class="btn" type="submit" id="bandSubmit">Publicar banda</button>
+          <button class="btn btn-ghost" type="button" data-nav="#/bands">Cancelar</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="view" id="view-band" hidden>
+      <button class="back-btn" type="button" data-nav="#/bands">← Volver a bandas</button>
+      <div class="detail" id="bandContent"></div>
     </section>
   </main>
 

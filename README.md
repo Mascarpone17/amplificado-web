@@ -19,6 +19,13 @@ estático — sin backend propio.
   esa especificación.
 - **Mensajes**: chat 1 a 1 en tiempo real entre usuarios, accesible desde el
   perfil de cualquier persona ("Enviar mensaje").
+- **Bandas**: página para grupos musicales, con integrantes (enlazables a su
+  perfil de Amplificado), qué música tocan, redes (Spotify, Apple Music, etc.)
+  y próximas fechas con link de entradas opcional.
+- **Moderación**: la cuenta admin (`reyesblas200910@gmail.com`, hardcodeada en
+  `firestore.rules` y `app.js`) puede borrar cualquier publicación o banda, y
+  otorgar una insignia de "verificado" a cualquier perfil. El dueño de una
+  publicación o banda también puede borrar la suya.
 
 ## 1. Configurar Firebase
 
@@ -92,9 +99,12 @@ img/                 fotos de producto usadas por el catálogo de ejemplo (Wikim
 ## Modelo de datos (Firestore)
 
 ```
-users/{uid}                    displayName, bio, mainInstrument, photoData, likedInstrumentIds[]
+users/{uid}                    displayName, bio, mainInstrument, photoData, likedInstrumentIds[], verified
 instruments/{id}                ownerId, ownerName, type, name, brand, description,
                                  photoData, specs[{label,value}], hotspots[{specIndex,x,y}], likesCount
+bands/{id}                      ownerId, ownerName, name, genre, photoData, description,
+                                 members[{name,profileUid}], links[{platform,url}],
+                                 shows[{date,location,ticketUrl}]
 chats/{uidA_uidB}               participants[], participantNames{}, lastMessage, lastMessageAt
 chats/{uidA_uidB}/messages/{id} senderId, text, createdAt
 ```
@@ -111,5 +121,6 @@ recargá la página.
 ## Notas
 
 - El `apiKey` de Firebase que va en `firebase-config.js` **no es secreto** — está diseñado para viajar en el código del cliente. La seguridad real la dan las reglas de Firestore (`firestore.rules`) y el dominio autorizado, no ocultar esa clave.
-- No hay edición ni borrado de instrumentos publicados todavía, ni moderación de contenido — es una base para seguir iterando.
+- No hay edición de instrumentos ni bandas publicadas todavía (solo borrado) — es una base para seguir iterando.
+- El vínculo de un integrante de banda a su perfil de Amplificado se resuelve por coincidencia exacta de nombre de usuario al publicar; si hay dos cuentas con el mismo nombre puede enlazar la incorrecta.
 - Los datos del catálogo de ejemplo (`seed-data.js`) son de demostración; se publican bajo un usuario ficticio "Amplificado Demo".

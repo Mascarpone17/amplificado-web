@@ -4,6 +4,14 @@
   var auth = firebase.auth();
   var db = firebase.firestore();
   var FieldValue = firebase.firestore.FieldValue;
+  var ADMIN_EMAIL = "reyesblas200910@gmail.com";
+
+  function isAdmin(){
+    return !!(currentUser && currentUser.email === ADMIN_EMAIL);
+  }
+  function verifiedBadge(profile){
+    return (profile && profile.verified) ? '<span class="verified-badge" title="Verificado">✓</span>' : "";
+  }
 
   // ---------------------------------------------------------------------
   // helpers
@@ -78,7 +86,10 @@
     profile: document.getElementById("view-profile"),
     profileEdit: document.getElementById("view-profile-edit"),
     chats: document.getElementById("view-chats"),
-    chat: document.getElementById("view-chat")
+    chat: document.getElementById("view-chat"),
+    bands: document.getElementById("view-bands"),
+    bandNew: document.getElementById("view-band-new"),
+    band: document.getElementById("view-band")
   };
 
   var currentUser = null;
@@ -252,6 +263,9 @@
     if(parts[0] === "profile" && parts[1]){ showView("profile"); renderProfile(parts[1]); return; }
     if(parts[0] === "chats"){ showView("chats"); renderChatsList(); return; }
     if(parts[0] === "chat" && parts[1]){ showView("chat"); renderChatWindow(parts[1]); return; }
+    if(parts[0] === "bands" && parts[1] === "new"){ showView("bandNew"); resetBandForm(); return; }
+    if(parts[0] === "bands"){ showView("bands"); renderBandsFeed(); return; }
+    if(parts[0] === "band" && parts[1]){ showView("band"); renderBandDetail(parts[1]); return; }
 
     location.hash = "#/feed";
   }
@@ -295,6 +309,11 @@
   function loadFeed(){
     db.collection("instruments").orderBy("createdAt", "desc").limit(100).get().then(function(qs){
       feedState.items = qs.docs.map(function(d){ var o = d.data(); o.id = d.id; return o; });
+      var ownerIds = feedState.items.map(function(g){ return g.ownerId; }).filter(function(id, i, arr){
+        return id && id !== "demo" && arr.indexOf(id) === i;
+      });
+      return Promise.all(ownerIds.map(getProfile));
+    }).then(function(){
       renderGrid();
     }).catch(function(err){
       feedCountEl.textContent = "";
@@ -338,7 +357,7 @@
             '<span class="card-type">' + escapeHtml(g.type || "") + '</span>' +
             '<h3 class="card-name">' + escapeHtml(g.name) + '</h3>' +
             '<p class="card-blurb">' + escapeHtml(g.description || "") + '</p>' +
-            '<div class="card-owner">' + avatarHtml({ photoData: g.ownerPhotoData, displayName: g.ownerName }, "xs") + '<span>' + escapeHtml(g.ownerName || "") + '</span></div>' +
+            '<div class="card-owner">' + avatarHtml({ photoData: g.ownerPhotoData, displayName: g.ownerName }, "xs") + '<span>' + escapeHtml(g.ownerName || "") + verifiedBadge(profileCache[g.ownerId]) + '</span></div>' +
             '<div class="card-foot">' +
               '<button type="button" class="like-btn" data-like-id="' + g.id + '" data-liked="' + !!liked + '">' + (liked ? "♥" : "♡") + ' <span>' + (g.likesCount || 0) + '</span></button>' +
               '<span class="card-cta">Ver →</span>' +
@@ -593,6 +612,11 @@
       if(!snap.exists){ detailContent.innerHTML = '<p class="empty-state">Ese instrumento ya no existe.</p>'; return; }
       var g = snap.data(); g.id = snap.id;
       var liked = myProfile && Array.isArray(myProfile.likedInstrumentIds) && myProfile.likedInstrumentIds.indexOf(g.id) !== -1;
+      var canDelete = g.ownerId && (g.ownerId === currentUser.uid || isAdmin());
+      return getProfile(g.ownerId).then(function(ownerProfile){ return { g: g, liked: liked, canDelete: canDelete, ownerProfile: ownerProfile }; });
+    }).then(function(ctx){
+      if(!ctx) return;
+      var g = ctx.g, liked = ctx.liked, canDelete = ctx.canDelete;
       var specs = g.specs || [];
       var hotspotsByIdx = {};
       (g.hotspots || []).forEach(function(h){ hotspotsByIdx[h.specIndex] = h; });
@@ -615,16 +639,24 @@
           (g.brand ? '<p class="detail-brand">' + escapeHtml(g.brand) + '</p>' : '') +
           '<div class="detail-actions">' +
             '<button type="button" class="btn btn-ghost" id="detailLikeBtn" data-liked="' + !!liked + '">' + (liked ? "♥ Te gusta" : "♡ Me gusta") + ' (' + (g.likesCount || 0) + ')</button>' +
+            (canDelete ? '<button type="button" class="btn-danger-ghost" id="detailDeleteBtn">🗑 Borrar</button>' : '') +
           '</div>' +
           (g.description ? '<p class="detail-blurb">' + escapeHtml(g.description) + '</p>' : '') +
           (specs.length ? '<table class="spec-table">' + specRowsHtml + '</table>' : '') +
           '<button type="button" class="owner-card" id="ownerCardBtn" data-owner="' + g.ownerId + '">' +
             avatarHtml({ photoData: g.ownerPhotoData, displayName: g.ownerName }, "md") +
-            '<span><span class="owner-label">Publicado por</span><br /><span class="owner-name">' + escapeHtml(g.ownerName || "") + '</span></span>' +
+            '<span><span class="owner-label">Publicado por</span><br /><span class="owner-name">' + escapeHtml(g.ownerName || "") + verifiedBadge(ctx.ownerProfile) + '</span></span>' +
           '</button>' +
         '</div>';
 
       document.getElementById("detailLikeBtn").addEventListener("click", function(){ toggleLike(g.id); });
+      var deleteBtn = document.getElementById("detailDeleteBtn");
+      if(deleteBtn) deleteBtn.addEventListener("click", function(){
+        if(!confirm("¿Borrar esta publicación? No se puede deshacer.")) return;
+        db.collection("instruments").doc(g.id).delete().then(function(){
+          location.hash = "#/feed";
+        }).catch(function(err){ alert("No se pudo borrar: " + (err.message || err)); });
+      });
       var ownerBtn = document.getElementById("ownerCardBtn");
       if(g.ownerId && g.ownerId !== "demo"){
         ownerBtn.addEventListener("click", function(){ location.hash = "#/profile/" + g.ownerId; });
@@ -687,17 +719,21 @@
           '</article>';
       }).join("") : '<p class="empty-state">' + (isMe ? "Todavía no publicaste ningún instrumento." : "Este usuario todavía no publicó instrumentos.") + '</p>';
 
+      var showAdminVerify = isAdmin() && !isMe;
       profileContent.innerHTML = '' +
         '<div class="profile-head">' +
           avatarHtml(profile, "lg") +
           '<div>' +
-            '<h1 class="profile-name">' + escapeHtml(profile.displayName || "") + '</h1>' +
+            '<h1 class="profile-name">' + escapeHtml(profile.displayName || "") + verifiedBadge(profile) + '</h1>' +
             (profile.mainInstrument ? '<p class="profile-main-instr">🎸 ' + escapeHtml(profile.mainInstrument) + '</p>' : '') +
             (profile.bio ? '<p class="profile-bio">' + escapeHtml(profile.bio) + '</p>' : '') +
             '<div class="profile-actions">' +
               (isMe
                 ? '<button class="btn btn-ghost" type="button" id="editProfileLink">Editar perfil</button>'
                 : '<button class="btn" type="button" id="messageBtn">Enviar mensaje</button>') +
+              (showAdminVerify
+                ? '<button class="btn btn-ghost" type="button" id="adminVerifyBtn">' + (profile.verified ? "Quitar verificado" : "✓ Dar verificado") + '</button>'
+                : '') +
             '</div>' +
           '</div>' +
         '</div>' +
@@ -708,6 +744,14 @@
         document.getElementById("editProfileLink").addEventListener("click", function(){ location.hash = "#/profile/edit"; });
       } else {
         document.getElementById("messageBtn").addEventListener("click", function(){ location.hash = "#/chat/" + uid; });
+      }
+      if(showAdminVerify){
+        document.getElementById("adminVerifyBtn").addEventListener("click", function(){
+          db.collection("users").doc(uid).update({ verified: !profile.verified }).then(function(){
+            delete profileCache[uid];
+            renderProfile(uid);
+          }).catch(function(err){ alert("No se pudo actualizar: " + (err.message || err)); });
+        });
       }
       Array.prototype.forEach.call(profileContent.querySelectorAll(".card"), function(card){
         card.addEventListener("click", function(){ location.hash = "#/instrument/" + card.getAttribute("data-id"); });
@@ -821,7 +865,7 @@
     getProfile(otherUid).then(function(otherProfile){
       chatContent.innerHTML = '' +
         '<div class="chat-window">' +
-          '<div class="chat-header">' + avatarHtml(otherProfile, "sm") + '<span class="name">' + escapeHtml(otherProfile.displayName || "") + '</span></div>' +
+          '<div class="chat-header">' + avatarHtml(otherProfile, "sm") + '<span class="name">' + escapeHtml(otherProfile.displayName || "") + verifiedBadge(otherProfile) + '</span></div>' +
           '<div class="chat-messages" id="chatMessages"></div>' +
           '<form class="chat-input-row" id="chatSendForm">' +
             '<input type="text" id="chatInput" placeholder="Escribí un mensaje…" autocomplete="off" />' +
@@ -874,6 +918,282 @@
           alert("No se pudo enviar el mensaje: " + (err.message || err));
         });
       });
+    });
+  }
+
+  // ---------------------------------------------------------------------
+  // bandas
+  // ---------------------------------------------------------------------
+  var bandForm = document.getElementById("bandForm");
+  var membersEditor = document.getElementById("membersEditor");
+  var linksEditor = document.getElementById("linksEditor");
+  var showsEditor = document.getElementById("showsEditor");
+  var bandPhotoInput = document.getElementById("bandPhoto");
+  var bandPhotoPreview = document.getElementById("bandPhotoPreview");
+  var bandError = document.getElementById("bandError");
+  var bandSubmit = document.getElementById("bandSubmit");
+  var bandsGrid = document.getElementById("bandsGrid");
+  var bandsCount = document.getElementById("bandsCount");
+  var bandsEmpty = document.getElementById("bandsEmpty");
+  var bandContent = document.getElementById("bandContent");
+
+  var bandMembers = [];
+  var bandLinks = [];
+  var bandShows = [];
+  var bandPhotoData = "";
+
+  function resetBandForm(){
+    bandForm.reset();
+    bandMembers = [{ name: "", lookup: "" }];
+    bandLinks = [{ platform: "", url: "" }];
+    bandShows = [{ date: "", location: "", ticketUrl: "" }];
+    bandPhotoData = "";
+    bandPhotoPreview.hidden = true;
+    bandPhotoPreview.innerHTML = "";
+    bandError.textContent = "";
+    renderMembersEditor();
+    renderLinksEditor();
+    renderShowsEditor();
+  }
+
+  function renderMembersEditor(){
+    membersEditor.innerHTML = bandMembers.map(function(m, i){
+      return '' +
+        '<div class="spec-row cols-2" data-idx="' + i + '">' +
+          '<input type="text" class="m-name" placeholder="Nombre del integrante" value="' + escapeHtml(m.name) + '" />' +
+          '<input type="text" class="m-lookup" placeholder="Usuario de Amplificado (opcional)" value="' + escapeHtml(m.lookup) + '" />' +
+          '<button type="button" class="row-remove">✕</button>' +
+        '</div>';
+    }).join("");
+    Array.prototype.forEach.call(membersEditor.querySelectorAll(".spec-row"), function(row){
+      var i = Number(row.getAttribute("data-idx"));
+      row.querySelector(".m-name").addEventListener("input", function(e){ bandMembers[i].name = e.target.value; });
+      row.querySelector(".m-lookup").addEventListener("input", function(e){ bandMembers[i].lookup = e.target.value; });
+      row.querySelector(".row-remove").addEventListener("click", function(){ bandMembers.splice(i, 1); renderMembersEditor(); });
+    });
+  }
+  document.getElementById("addMemberBtn").addEventListener("click", function(){
+    bandMembers.push({ name: "", lookup: "" });
+    renderMembersEditor();
+  });
+
+  function renderLinksEditor(){
+    linksEditor.innerHTML = bandLinks.map(function(l, i){
+      return '' +
+        '<div class="spec-row cols-2" data-idx="' + i + '">' +
+          '<input type="text" class="l-platform" placeholder="Ej: Spotify" value="' + escapeHtml(l.platform) + '" />' +
+          '<input type="url" class="l-url" placeholder="https://…" value="' + escapeHtml(l.url) + '" />' +
+          '<button type="button" class="row-remove">✕</button>' +
+        '</div>';
+    }).join("");
+    Array.prototype.forEach.call(linksEditor.querySelectorAll(".spec-row"), function(row){
+      var i = Number(row.getAttribute("data-idx"));
+      row.querySelector(".l-platform").addEventListener("input", function(e){ bandLinks[i].platform = e.target.value; });
+      row.querySelector(".l-url").addEventListener("input", function(e){ bandLinks[i].url = e.target.value; });
+      row.querySelector(".row-remove").addEventListener("click", function(){ bandLinks.splice(i, 1); renderLinksEditor(); });
+    });
+  }
+  document.getElementById("addLinkBtn").addEventListener("click", function(){
+    bandLinks.push({ platform: "", url: "" });
+    renderLinksEditor();
+  });
+
+  function renderShowsEditor(){
+    showsEditor.innerHTML = bandShows.map(function(s, i){
+      return '' +
+        '<div class="spec-row cols-show" data-idx="' + i + '">' +
+          '<input type="date" class="s-date" value="' + escapeHtml(s.date) + '" />' +
+          '<input type="text" class="s-location" placeholder="Lugar" value="' + escapeHtml(s.location) + '" />' +
+          '<input type="url" class="s-ticket" placeholder="Link de entradas (opcional)" value="' + escapeHtml(s.ticketUrl) + '" />' +
+          '<button type="button" class="row-remove">✕</button>' +
+        '</div>';
+    }).join("");
+    Array.prototype.forEach.call(showsEditor.querySelectorAll(".spec-row"), function(row){
+      var i = Number(row.getAttribute("data-idx"));
+      row.querySelector(".s-date").addEventListener("input", function(e){ bandShows[i].date = e.target.value; });
+      row.querySelector(".s-location").addEventListener("input", function(e){ bandShows[i].location = e.target.value; });
+      row.querySelector(".s-ticket").addEventListener("input", function(e){ bandShows[i].ticketUrl = e.target.value; });
+      row.querySelector(".row-remove").addEventListener("click", function(){ bandShows.splice(i, 1); renderShowsEditor(); });
+    });
+  }
+  document.getElementById("addShowBtn").addEventListener("click", function(){
+    bandShows.push({ date: "", location: "", ticketUrl: "" });
+    renderShowsEditor();
+  });
+
+  bandPhotoInput.addEventListener("change", function(){
+    var file = bandPhotoInput.files[0];
+    if(!file) return;
+    bandError.textContent = "";
+    resizeImageToDataURL(file, 900, 0.75).then(function(dataUrl){
+      bandPhotoData = dataUrl;
+      bandPhotoPreview.hidden = false;
+      bandPhotoPreview.innerHTML = '<div class="hotspot-stage"><img src="' + dataUrl + '" alt="" /></div>';
+    }).catch(function(err){
+      bandError.textContent = err.message || "No se pudo procesar la imagen.";
+    });
+  });
+
+  bandForm.addEventListener("submit", function(e){
+    e.preventDefault();
+    bandError.textContent = "";
+    var name = document.getElementById("bandName").value.trim();
+    var genre = document.getElementById("bandGenre").value.trim();
+    var description = document.getElementById("bandDesc").value.trim();
+
+    if(!name){ bandError.textContent = "Ponele un nombre a la banda."; return; }
+    if(!bandPhotoData){ bandError.textContent = "Subí una foto principal."; return; }
+
+    var memberPromises = bandMembers.filter(function(m){ return m.name.trim(); }).map(function(m){
+      var mName = m.name.trim();
+      var lookup = m.lookup.trim();
+      if(!lookup) return Promise.resolve({ name: mName, profileUid: null });
+      return db.collection("users").where("displayName", "==", lookup).limit(1).get().then(function(qs){
+        return { name: mName, profileUid: qs.empty ? null : qs.docs[0].id };
+      });
+    });
+    var finalLinks = bandLinks.filter(function(l){ return l.platform.trim() && l.url.trim(); })
+      .map(function(l){ return { platform: l.platform.trim(), url: l.url.trim() }; });
+    var finalShows = bandShows.filter(function(s){ return s.date && s.location.trim(); })
+      .map(function(s){ return { date: s.date, location: s.location.trim(), ticketUrl: (s.ticketUrl || "").trim() }; });
+
+    bandSubmit.disabled = true;
+    bandSubmit.textContent = "Publicando…";
+    Promise.all(memberPromises).then(function(finalMembers){
+      return db.collection("bands").add({
+        ownerId: currentUser.uid,
+        ownerName: (myProfile && myProfile.displayName) || currentUser.email,
+        name: name,
+        genre: genre,
+        photoData: bandPhotoData,
+        description: description,
+        members: finalMembers,
+        links: finalLinks,
+        shows: finalShows,
+        createdAt: FieldValue.serverTimestamp()
+      });
+    }).then(function(ref){
+      location.hash = "#/band/" + ref.id;
+    }).catch(function(err){
+      bandError.textContent = err.message || "No se pudo publicar la banda.";
+    }).finally(function(){
+      bandSubmit.disabled = false;
+      bandSubmit.textContent = "Publicar banda";
+    });
+  });
+
+  function renderBandsFeed(){
+    bandsGrid.innerHTML = "";
+    bandsCount.textContent = "Cargando…";
+    bandsEmpty.innerHTML = "";
+    db.collection("bands").orderBy("createdAt", "desc").limit(100).get().then(function(qs){
+      var items = qs.docs.map(function(d){ var o = d.data(); o.id = d.id; return o; });
+      bandsCount.textContent = items.length + (items.length === 1 ? " banda publicada" : " bandas publicadas");
+      if(items.length === 0){
+        bandsEmpty.innerHTML = '<div class="empty-state"><p>Todavía no hay bandas publicadas. Creá la página de tu banda o proyecto musical.</p></div>';
+        bandsGrid.innerHTML = "";
+        return;
+      }
+      bandsGrid.innerHTML = items.map(function(b){
+        var memberCount = (b.members || []).length;
+        return '' +
+          '<article class="card" data-id="' + b.id + '">' +
+            '<div class="card-art"><img src="' + b.photoData + '" alt="' + escapeHtml(b.name) + '" loading="lazy" /></div>' +
+            '<div class="card-body">' +
+              '<span class="card-type">' + escapeHtml(b.genre || "Banda") + '</span>' +
+              '<h3 class="card-name">' + escapeHtml(b.name) + '</h3>' +
+              '<p class="card-blurb">' + escapeHtml(b.description || "") + '</p>' +
+              '<div class="card-foot"><span class="mono">' + memberCount + (memberCount === 1 ? " integrante" : " integrantes") + '</span><span class="card-cta">Ver →</span></div>' +
+            '</div>' +
+          '</article>';
+      }).join("");
+      Array.prototype.forEach.call(bandsGrid.querySelectorAll(".card"), function(card){
+        card.addEventListener("click", function(){ location.hash = "#/band/" + card.getAttribute("data-id"); });
+      });
+    }).catch(function(err){
+      bandsCount.textContent = "";
+      bandsGrid.innerHTML = '<p class="empty-state">No se pudo cargar. ' + escapeHtml(err.message || "") + '</p>';
+    });
+  }
+
+  function formatShowDate(dateStr){
+    if(!dateStr) return "";
+    var d = new Date(dateStr + "T00:00:00");
+    if(isNaN(d.getTime())) return dateStr;
+    return d.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "numeric" });
+  }
+
+  function renderBandDetail(id){
+    bandContent.innerHTML = '<p class="empty-state">Cargando…</p>';
+    db.collection("bands").doc(id).get().then(function(snap){
+      if(!snap.exists){ bandContent.innerHTML = '<p class="empty-state">Esa banda ya no existe.</p>'; return; }
+      var b = snap.data(); b.id = snap.id;
+      var canDelete = b.ownerId && (b.ownerId === currentUser.uid || isAdmin());
+      var members = b.members || [];
+      var memberProfilePromises = members.map(function(m){
+        return m.profileUid ? getProfile(m.profileUid) : Promise.resolve(null);
+      });
+      return Promise.all(memberProfilePromises).then(function(memberProfiles){
+        return { b: b, canDelete: canDelete, members: members, memberProfiles: memberProfiles };
+      });
+    }).then(function(ctx){
+      if(!ctx) return;
+      var b = ctx.b, members = ctx.members, memberProfiles = ctx.memberProfiles, canDelete = ctx.canDelete;
+      var links = b.links || [];
+      var shows = (b.shows || []).slice().sort(function(a, c){ return a.date < c.date ? -1 : a.date > c.date ? 1 : 0; });
+
+      var linksHtml = links.length ? '<div class="band-links">' + links.map(function(l){
+        return '<a class="band-link" href="' + encodeURI(l.url) + '" target="_blank" rel="noopener">' + escapeHtml(l.platform) + ' ↗</a>';
+      }).join("") + '</div>' : '';
+
+      var membersHtml = members.length ? '<div class="band-members">' + members.map(function(m, i){
+        var mp = memberProfiles[i];
+        var nameHtml = escapeHtml(m.name) + verifiedBadge(mp);
+        var inner = m.profileUid
+          ? '<a href="#/profile/' + m.profileUid + '">' + nameHtml + '</a>'
+          : '<span>' + nameHtml + '</span>';
+        return '<span class="band-member">' + avatarHtml(mp || { displayName: m.name }, "xs") + inner + '</span>';
+      }).join("") + '</div>' : '';
+
+      var showsHtml = shows.length ? '<div class="show-list">' + shows.map(function(s){
+        return '' +
+          '<div class="show-item">' +
+            '<span class="show-date mono">' + escapeHtml(formatShowDate(s.date)) + '</span>' +
+            '<span class="show-info"><span class="show-location">' + escapeHtml(s.location) + '</span></span>' +
+            (s.ticketUrl ? '<a class="btn" href="' + encodeURI(s.ticketUrl) + '" target="_blank" rel="noopener">Comprar entradas</a>' : '') +
+          '</div>';
+      }).join("") + '</div>' : '';
+
+      bandContent.innerHTML = '' +
+        '<div class="hotspot-stage"><img src="' + b.photoData + '" alt="' + escapeHtml(b.name) + '" /></div>' +
+        '<div class="detail-info">' +
+          '<span class="detail-type">' + escapeHtml(b.genre || "Banda") + '</span>' +
+          '<h1 class="detail-name">' + escapeHtml(b.name) + '</h1>' +
+          '<div class="detail-actions">' +
+            (canDelete ? '<button type="button" class="btn-danger-ghost" id="bandDeleteBtn">🗑 Borrar</button>' : '') +
+          '</div>' +
+          (b.description ? '<p class="detail-blurb">' + escapeHtml(b.description) + '</p>' : '') +
+          (membersHtml ? '<p class="section-label" style="margin-top:0;">Integrantes</p>' + membersHtml : '') +
+          (linksHtml ? '<p class="section-label" style="margin-top:0;">Escuchalos en</p>' + linksHtml : '') +
+          (showsHtml ? '<p class="section-label" style="margin-top:0;">Próximas fechas</p>' + showsHtml : '') +
+          '<button type="button" class="owner-card" id="bandOwnerCardBtn">' +
+            avatarHtml({ displayName: b.ownerName }, "md") +
+            '<span><span class="owner-label">Publicado por</span><br /><span class="owner-name">' + escapeHtml(b.ownerName || "") + '</span></span>' +
+          '</button>' +
+        '</div>';
+
+      var deleteBtn = document.getElementById("bandDeleteBtn");
+      if(deleteBtn) deleteBtn.addEventListener("click", function(){
+        if(!confirm("¿Borrar esta banda? No se puede deshacer.")) return;
+        db.collection("bands").doc(b.id).delete().then(function(){
+          location.hash = "#/bands";
+        }).catch(function(err){ alert("No se pudo borrar: " + (err.message || err)); });
+      });
+      document.getElementById("bandOwnerCardBtn").addEventListener("click", function(){
+        location.hash = "#/profile/" + b.ownerId;
+      });
+    }).catch(function(err){
+      bandContent.innerHTML = '<p class="empty-state">Error al cargar: ' + escapeHtml(err.message || "") + '</p>';
     });
   }
 

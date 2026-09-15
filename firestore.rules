@@ -6,12 +6,22 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // Cuenta admin (moderación: borrar publicaciones, otorgar verificado).
+    // Cambiá este email si alguna vez cambiás de cuenta admin.
+    function isAdmin() {
+      return signedIn() && request.auth.token.email == 'reyesblas200910@gmail.com';
+    }
+
     // Perfiles: cualquier usuario logueado puede leerlos (foto, bio, instrumento
-    // principal), pero cada persona solo puede crear/editar el suyo.
+    // principal). Cada persona edita el suyo, pero no puede tocar su propio
+    // campo "verified" — eso solo lo puede escribir la cuenta admin.
     match /users/{uid} {
       allow read: if signedIn();
       allow create: if signedIn() && request.auth.uid == uid;
-      allow update: if signedIn() && request.auth.uid == uid;
+      allow update: if signedIn() && (
+        (request.auth.uid == uid && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['verified']))
+        || (isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['verified']))
+      );
       allow delete: if false;
     }
 
@@ -19,6 +29,7 @@ service cloud.firestore {
     // Solo el dueño puede crear su publicación. Cualquier usuario logueado
     // puede "likear", pero la regla solo permite tocar el contador de likes
     // (de a 1 por vez) — no puede modificar el resto del documento.
+    // El borrado lo puede hacer el dueño de la publicación o la cuenta admin.
     match /instruments/{id} {
       allow read: if signedIn();
       allow create: if signedIn()
@@ -28,7 +39,16 @@ service cloud.firestore {
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likesCount'])
         && (request.resource.data.likesCount == resource.data.likesCount + 1
             || request.resource.data.likesCount == resource.data.likesCount - 1);
-      allow delete: if false;
+      allow delete: if signedIn() && (request.auth.uid == resource.data.ownerId || isAdmin());
+    }
+
+    // Bandas: cualquier usuario logueado puede crear la suya y editarla
+    // (integrantes, redes, próximas fechas). Borrado: dueño o admin.
+    match /bands/{id} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update: if signedIn() && request.auth.uid == resource.data.ownerId;
+      allow delete: if signedIn() && (request.auth.uid == resource.data.ownerId || isAdmin());
     }
 
     // Chats 1 a 1: solo los dos participantes pueden leer/escribir la
