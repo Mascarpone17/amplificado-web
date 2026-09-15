@@ -13,14 +13,15 @@ service cloud.firestore {
     }
 
     // Perfiles: cualquier usuario logueado puede leerlos (foto, bio, instrumento
-    // principal). Cada persona edita el suyo, pero no puede tocar su propio
-    // campo "verified" — eso solo lo puede escribir la cuenta admin.
+    // principal). Cada persona edita el suyo, pero no puede tocar sus propios
+    // campos "verified" ni "isOwner" — esos solo los puede escribir la cuenta
+    // admin (incluso sobre su propio perfil).
     match /users/{uid} {
       allow read: if signedIn();
       allow create: if signedIn() && request.auth.uid == uid;
       allow update: if signedIn() && (
-        (request.auth.uid == uid && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['verified']))
-        || (isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['verified']))
+        (request.auth.uid == uid && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['verified', 'isOwner']))
+        || (isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['verified', 'isOwner']))
       );
       allow delete: if false;
     }

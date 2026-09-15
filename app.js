@@ -12,6 +12,9 @@
   function verifiedBadge(profile){
     return (profile && profile.verified) ? '<span class="verified-badge" title="Verificado">✓</span>' : "";
   }
+  function ownerBadge(profile){
+    return (profile && profile.isOwner) ? '<span class="owner-badge">Owner</span>' : "";
+  }
 
   // ---------------------------------------------------------------------
   // helpers
@@ -358,7 +361,7 @@
             '<span class="card-type">' + escapeHtml(g.type || "") + '</span>' +
             '<h3 class="card-name">' + escapeHtml(g.name) + '</h3>' +
             '<p class="card-blurb">' + escapeHtml(g.description || "") + '</p>' +
-            '<div class="card-owner">' + avatarHtml({ photoData: g.ownerPhotoData, displayName: g.ownerName }, "xs") + '<span>' + escapeHtml(g.ownerName || "") + verifiedBadge(profileCache[g.ownerId]) + '</span></div>' +
+            '<div class="card-owner">' + avatarHtml({ photoData: g.ownerPhotoData, displayName: g.ownerName }, "xs") + '<span>' + escapeHtml(g.ownerName || "") + verifiedBadge(profileCache[g.ownerId]) + ownerBadge(profileCache[g.ownerId]) + '</span></div>' +
             '<div class="card-foot">' +
               '<button type="button" class="like-btn" data-like-id="' + g.id + '" data-liked="' + !!liked + '">' + (liked ? "♥" : "♡") + ' <span>' + (g.likesCount || 0) + '</span></button>' +
               '<span class="card-cta">Ver →</span>' +
@@ -646,7 +649,7 @@
           (specs.length ? '<table class="spec-table">' + specRowsHtml + '</table>' : '') +
           '<button type="button" class="owner-card" id="ownerCardBtn" data-owner="' + g.ownerId + '">' +
             avatarHtml({ photoData: g.ownerPhotoData, displayName: g.ownerName }, "md") +
-            '<span><span class="owner-label">Publicado por</span><br /><span class="owner-name">' + escapeHtml(g.ownerName || "") + verifiedBadge(ctx.ownerProfile) + '</span></span>' +
+            '<span><span class="owner-label">Publicado por</span><br /><span class="owner-name">' + escapeHtml(g.ownerName || "") + verifiedBadge(ctx.ownerProfile) + ownerBadge(ctx.ownerProfile) + '</span></span>' +
           '</button>' +
         '</div>';
 
@@ -720,12 +723,12 @@
           '</article>';
       }).join("") : '<p class="empty-state">' + (isMe ? "Todavía no publicaste ningún instrumento." : "Este usuario todavía no publicó instrumentos.") + '</p>';
 
-      var showAdminVerify = isAdmin() && !isMe;
+      var showAdminVerify = isAdmin();
       profileContent.innerHTML = '' +
         '<div class="profile-head">' +
           avatarHtml(profile, "lg") +
           '<div>' +
-            '<h1 class="profile-name">' + escapeHtml(profile.displayName || "") + verifiedBadge(profile) + '</h1>' +
+            '<h1 class="profile-name">' + escapeHtml(profile.displayName || "") + verifiedBadge(profile) + ownerBadge(profile) + '</h1>' +
             (profile.mainInstrument ? '<p class="profile-main-instr">🎸 ' + escapeHtml(profile.mainInstrument) + '</p>' : '') +
             (profile.bio ? '<p class="profile-bio">' + escapeHtml(profile.bio) + '</p>' : '') +
             '<div class="profile-actions">' +
@@ -734,6 +737,9 @@
                 : '<button class="btn" type="button" id="messageBtn">Enviar mensaje</button>') +
               (showAdminVerify
                 ? '<button class="btn btn-ghost" type="button" id="adminVerifyBtn">' + (profile.verified ? "Quitar verificado" : "✓ Dar verificado") + '</button>'
+                : '') +
+              (showAdminVerify && isMe
+                ? '<button class="btn btn-ghost" type="button" id="adminOwnerBtn">' + (profile.isOwner ? "Quitar etiqueta Owner" : "🏷 Marcarme como Owner") + '</button>'
                 : '') +
             '</div>' +
           '</div>' +
@@ -749,6 +755,14 @@
       if(showAdminVerify){
         document.getElementById("adminVerifyBtn").addEventListener("click", function(){
           db.collection("users").doc(uid).update({ verified: !profile.verified }).then(function(){
+            delete profileCache[uid];
+            renderProfile(uid);
+          }).catch(function(err){ alert("No se pudo actualizar: " + (err.message || err)); });
+        });
+      }
+      if(showAdminVerify && isMe){
+        document.getElementById("adminOwnerBtn").addEventListener("click", function(){
+          db.collection("users").doc(uid).update({ isOwner: !profile.isOwner }).then(function(){
             delete profileCache[uid];
             renderProfile(uid);
           }).catch(function(err){ alert("No se pudo actualizar: " + (err.message || err)); });
@@ -866,7 +880,7 @@
     getProfile(otherUid).then(function(otherProfile){
       chatContent.innerHTML = '' +
         '<div class="chat-window">' +
-          '<div class="chat-header">' + avatarHtml(otherProfile, "sm") + '<span class="name">' + escapeHtml(otherProfile.displayName || "") + verifiedBadge(otherProfile) + '</span></div>' +
+          '<div class="chat-header">' + avatarHtml(otherProfile, "sm") + '<span class="name">' + escapeHtml(otherProfile.displayName || "") + verifiedBadge(otherProfile) + ownerBadge(otherProfile) + '</span></div>' +
           '<div class="chat-messages" id="chatMessages"></div>' +
           '<form class="chat-input-row" id="chatSendForm">' +
             '<input type="text" id="chatInput" placeholder="Escribí un mensaje…" autocomplete="off" />' +
@@ -1194,8 +1208,8 @@
       var memberProfilePromises = members.map(function(m){
         return m.profileUid ? getProfile(m.profileUid) : Promise.resolve(null);
       });
-      return Promise.all(memberProfilePromises).then(function(memberProfiles){
-        return { b: b, canDelete: canDelete, members: members, memberProfiles: memberProfiles };
+      return Promise.all([Promise.all(memberProfilePromises), getProfile(b.ownerId)]).then(function(results){
+        return { b: b, canDelete: canDelete, members: members, memberProfiles: results[0], ownerProfile: results[1] };
       });
     }).then(function(ctx){
       if(!ctx) return;
@@ -1209,7 +1223,7 @@
 
       var membersHtml = members.length ? '<div class="band-members">' + members.map(function(m, i){
         var mp = memberProfiles[i];
-        var nameHtml = escapeHtml(m.name) + verifiedBadge(mp);
+        var nameHtml = escapeHtml(m.name) + verifiedBadge(mp) + ownerBadge(mp);
         var inner = m.profileUid
           ? '<a href="#/profile/' + m.profileUid + '">' + nameHtml + '</a>'
           : '<span>' + nameHtml + '</span>';
@@ -1239,8 +1253,8 @@
           (linksHtml ? '<p class="section-label" style="margin-top:0;">Escuchalos en</p>' + linksHtml : '') +
           (showsHtml ? '<p class="section-label" style="margin-top:0;">Próximas fechas</p>' + showsHtml : '') +
           '<button type="button" class="owner-card" id="bandOwnerCardBtn">' +
-            avatarHtml({ displayName: b.ownerName }, "md") +
-            '<span><span class="owner-label">Publicado por</span><br /><span class="owner-name">' + escapeHtml(b.ownerName || "") + '</span></span>' +
+            avatarHtml(ctx.ownerProfile || { displayName: b.ownerName }, "md") +
+            '<span><span class="owner-label">Publicado por</span><br /><span class="owner-name">' + escapeHtml(b.ownerName || "") + verifiedBadge(ctx.ownerProfile) + ownerBadge(ctx.ownerProfile) + '</span></span>' +
           '</button>' +
         '</div>';
 

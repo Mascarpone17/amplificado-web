@@ -24,8 +24,9 @@ estático — sin backend propio.
   y próximas fechas con link de entradas opcional.
 - **Moderación**: la cuenta admin (`reyesblas200910@gmail.com`, hardcodeada en
   `firestore.rules` y `app.js`) puede borrar cualquier publicación o banda, y
-  otorgar una insignia de "verificado" a cualquier perfil. El dueño de una
-  publicación o banda también puede borrar la suya.
+  otorgar una insignia de "verificado" a cualquier perfil, incluido el suyo.
+  El dueño de una publicación o banda también puede borrar la suya. Solo la
+  cuenta admin puede además marcar su propio perfil con la etiqueta "Owner".
 
 ## 1. Configurar Firebase
 
@@ -99,7 +100,7 @@ img/                 fotos de producto usadas por el catálogo de ejemplo (Wikim
 ## Modelo de datos (Firestore)
 
 ```
-users/{uid}                    displayName, bio, mainInstrument, photoData, likedInstrumentIds[], verified
+users/{uid}                    displayName, bio, mainInstrument, photoData, likedInstrumentIds[], verified, isOwner
 instruments/{id}                ownerId, ownerName, type, name, brand, description,
                                  photoData, specs[{label,value}], hotspots[{specIndex,x,y}], likesCount
 bands/{id}                      ownerId, ownerName, name, genre, photoData, description,
