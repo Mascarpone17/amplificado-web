@@ -49,6 +49,7 @@
   .mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums;}
   a{color:inherit;}
   button{font:inherit;color:inherit;}
+  textarea{font:inherit;color:inherit;}
   :focus-visible{outline:2px solid var(--accent);outline-offset:3px;}
   [hidden]{display:none!important;}
   @media (prefers-reduced-motion:reduce){
@@ -59,15 +60,28 @@
   #boot{min-height:100dvh;display:flex;align-items:center;justify-content:center;color:var(--ink-muted);font-family:var(--font-mono);font-size:14px;}
 
   .topbar{
-    display:flex;align-items:center;justify-content:space-between;gap:16px;
-    padding-block:18px;border-bottom:1px solid var(--line);margin-bottom:32px;
+    display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+    padding-block:16px;border-bottom:1px solid var(--line);margin-bottom:32px;
   }
   .brand{font-size:20px;font-weight:700;letter-spacing:.08em;background:none;border:none;cursor:pointer;padding:0;color:var(--ink);display:flex;align-items:center;gap:8px;}
   .brand::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px rgba(255,106,19,.25);}
-  .topbar-actions{display:flex;align-items:center;gap:14px;}
-  .user-chip{font-family:var(--font-mono);font-size:13px;color:var(--ink-muted);}
+  .navlinks{display:flex;align-items:center;gap:4px;background:var(--surface-2);border-radius:10px;padding:4px;}
+  .navlinks a{text-decoration:none;font-size:13.5px;font-weight:700;letter-spacing:.02em;color:var(--ink-muted);padding:8px 14px;border-radius:7px;}
+  .navlinks a.active{background:var(--surface);color:var(--ink);box-shadow:var(--shadow);}
+  .navlinks a:hover{color:var(--ink);}
+  .topbar-actions{display:flex;align-items:center;gap:10px;}
+  .user-chip-btn{display:flex;align-items:center;gap:8px;background:none;border:1px solid var(--line);border-radius:999px;padding:4px 12px 4px 4px;cursor:pointer;}
+  .user-chip-btn:hover{border-color:var(--accent);}
+  .user-chip{font-family:var(--font-mono);font-size:12.5px;color:var(--ink-muted);}
   .logout-btn{background:none;border:1px solid var(--line);border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;color:var(--ink-muted);}
   .logout-btn:hover{border-color:var(--accent);color:var(--ink);}
+
+  .avatar{border-radius:50%;object-fit:cover;background:var(--surface-2);flex-shrink:0;display:block;}
+  .avatar-placeholder{border-radius:50%;background:var(--surface-2);color:var(--ink-muted);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);flex-shrink:0;}
+  .avatar-xs{width:22px;height:22px;font-size:10px;}
+  .avatar-sm{width:30px;height:30px;font-size:12px;}
+  .avatar-md{width:44px;height:44px;font-size:15px;}
+  .avatar-lg{width:96px;height:96px;font-size:30px;}
 
   .view-login{
     min-height:calc(100dvh - 40px);display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -77,7 +91,7 @@
   .login-inner{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;max-width:420px;width:100%;}
   .login-mark{font-size:clamp(40px,9vw,64px);font-weight:700;letter-spacing:.04em;margin:0;color:var(--ink);}
   .login-mark em{font-style:normal;color:var(--accent);}
-  .login-tagline{color:var(--ink-muted);font-size:17px;margin-block:10px 28px;max-width:32ch;}
+  .login-tagline{color:var(--ink-muted);font-size:17px;margin-block:10px 28px;max-width:34ch;}
 
   .auth-tabs{display:flex;gap:6px;background:var(--surface-2);border-radius:10px;padding:4px;width:100%;margin-bottom:16px;}
   .auth-tab{flex:1;background:none;border:none;border-radius:7px;padding:9px 0;font-size:13.5px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;cursor:pointer;color:var(--ink-muted);}
@@ -86,10 +100,11 @@
   .login-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:28px;width:100%;box-shadow:var(--shadow);text-align:left;}
   .field{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
   .field label{font-size:13px;font-weight:600;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.06em;}
-  .field input{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:11px 13px;font-size:15px;color:var(--ink);font-family:var(--font-body);width:100%;}
-  .field input::placeholder{color:var(--ink-muted);opacity:.7;}
-  .field input:focus{outline:2px solid var(--accent);outline-offset:1px;}
+  .field input,.field textarea,.field select{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:11px 13px;font-size:15px;color:var(--ink);font-family:var(--font-body);width:100%;}
+  .field input::placeholder,.field textarea::placeholder{color:var(--ink-muted);opacity:.7;}
+  .field input:focus,.field textarea:focus,.field select:focus{outline:2px solid var(--accent);outline-offset:1px;}
   .field-hint{font-size:12px;color:var(--ink-muted);margin-top:2px;}
+  .field textarea{resize:vertical;min-height:80px;}
 
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:var(--accent-ink);border:none;border-radius:8px;padding:12px 20px;font-weight:600;font-size:15px;cursor:pointer;width:100%;transition:background-color .15s ease, transform .1s ease;}
   .btn:hover{background:var(--accent-strong);}
@@ -97,64 +112,119 @@
   .btn:disabled{opacity:.6;cursor:default;}
   .btn-ghost{background:transparent;color:var(--ink);border:1px solid var(--line);width:auto;padding:9px 16px;font-size:14px;}
   .btn-ghost:hover{background:var(--surface-2);}
+  .btn-sm{width:auto;padding:8px 14px;font-size:13px;}
   .btn-link{background:none;border:none;color:var(--accent);font-size:13px;font-weight:600;cursor:pointer;padding:0;width:auto;text-decoration:underline;text-underline-offset:2px;}
+  .btn-danger-ghost{background:transparent;color:var(--danger);border:1px solid var(--line);width:auto;padding:6px 10px;font-size:12.5px;}
 
   .login-hint{font-size:13px;color:var(--ink-muted);margin-top:14px;text-align:center;}
   .login-error{color:var(--danger);font-size:13px;margin:-6px 0 14px;min-height:1em;}
   .login-notice{color:var(--gold);font-size:13px;margin:-6px 0 14px;min-height:1em;}
   .auth-footer-row{display:flex;justify-content:center;margin-top:14px;}
 
-  .catalog-head{margin-bottom:24px;}
-  .catalog-head h1{font-size:clamp(28px,4vw,38px);margin:0 0 6px;}
-  .catalog-sub{color:var(--ink-muted);margin:0 0 20px;}
-  .filters{display:flex;flex-wrap:wrap;gap:8px;}
+  .page-head{margin-bottom:24px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+  .page-head h1{font-size:clamp(26px,4vw,36px);margin:0 0 6px;}
+  .page-sub{color:var(--ink-muted);margin:0;}
+  .filters{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px;}
   .chip{border:1px solid var(--line);background:var(--surface);color:var(--ink-muted);border-radius:999px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;letter-spacing:.02em;}
   .chip:hover{border-color:var(--accent);color:var(--ink);}
   .chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);}
 
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:20px;margin-block:28px 56px;}
-  .card{text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;box-shadow:var(--shadow);transition:transform .15s ease, border-color .15s ease;}
+  .card{text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;box-shadow:var(--shadow);transition:transform .15s ease, border-color .15s ease;padding:0;width:100%;}
   .card:hover{transform:translateY(-3px);border-color:var(--accent);}
   .card-art{aspect-ratio:4/3;background:var(--stage);position:relative;display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--line);overflow:hidden;}
-  .card-art img{width:auto;height:104%;max-width:88%;object-fit:contain;filter:drop-shadow(0 10px 14px rgba(20,14,8,.22));}
-  .fav-toggle{position:absolute;top:10px;right:10px;background:rgba(255,253,248,.85);border:1px solid var(--line);border-radius:999px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;color:var(--ink-muted);}
-  .fav-toggle[data-fav="true"]{color:var(--accent);}
+  .card-art img{width:100%;height:100%;object-fit:cover;}
   .card-body{padding:16px;display:flex;flex-direction:column;gap:6px;flex:1;}
   .card-tags{display:flex;align-items:center;gap:8px;}
-  .card-family{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);}
-  .tier-pill{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--ink-muted);}
-  .tier-pill[data-tier="Profesional"]{color:var(--accent);border-color:var(--accent);}
-  .detail-tier{margin-left:10px;}
+  .card-type{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);}
   .card-name{font-family:var(--font-display);font-size:19px;text-transform:none;letter-spacing:0;margin:0;}
-  .card-blurb{font-size:13.5px;color:var(--ink-muted);flex:1;margin:0;}
+  .card-blurb{font-size:13.5px;color:var(--ink-muted);flex:1;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .card-owner{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-muted);margin-top:2px;}
   .card-foot{display:flex;align-items:center;justify-content:space-between;margin-top:8px;}
-  .card-price{font-family:var(--font-mono);font-weight:600;font-size:16px;}
-  .card-cta{font-size:13px;color:var(--accent);font-weight:600;}
-  .empty-state{color:var(--ink-muted);padding:40px 0;text-align:center;}
+  .like-btn{display:inline-flex;align-items:center;gap:6px;background:none;border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:700;cursor:pointer;color:var(--ink-muted);width:auto;}
+  .like-btn:hover{border-color:var(--accent);color:var(--ink);}
+  .like-btn[data-liked="true"]{color:var(--accent);border-color:var(--accent);}
+  .empty-state{color:var(--ink-muted);padding:40px 24px;text-align:center;background:var(--surface);border:1px dashed var(--line);border-radius:14px;margin-block:20px;}
+  .empty-state p{max-width:44ch;margin:0 auto 16px;}
 
-  .back-btn{background:none;border:none;color:var(--ink-muted);font-size:14px;cursor:pointer;padding:0;margin-bottom:20px;font-weight:600;}
+  .back-btn{background:none;border:none;color:var(--ink-muted);font-size:14px;cursor:pointer;padding:0;margin-bottom:20px;font-weight:600;width:auto;}
   .back-btn:hover{color:var(--accent);}
-  .detail{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:40px;margin-bottom:64px;align-items:start;}
+  .detail{display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:40px;margin-bottom:64px;align-items:start;}
   @media (max-width:760px){.detail{grid-template-columns:1fr;}}
-  .detail-art{background:var(--stage);border:1px solid var(--line);border-radius:16px;display:flex;align-items:center;justify-content:center;padding:20px;position:sticky;top:20px;overflow:hidden;}
-  .detail-art img{width:auto;height:min(58vh,500px);max-width:100%;object-fit:contain;filter:drop-shadow(0 16px 20px rgba(20,14,8,.25));}
-  .detail-family{color:var(--gold);font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;}
+
+  .hotspot-stage{position:relative;background:var(--stage);border:1px solid var(--line);border-radius:16px;overflow:hidden;user-select:none;}
+  .hotspot-stage img{display:block;width:100%;height:auto;}
+  .hotspot-pin{position:absolute;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;background:var(--accent);color:var(--accent-ink);border:2px solid var(--surface);box-shadow:0 2px 6px rgba(0,0,0,.35);cursor:pointer;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0;}
+  .hotspot-pin:hover,.hotspot-pin.open{background:var(--accent-strong);}
+  .hotspot-tooltip{position:absolute;z-index:5;background:var(--ink);color:var(--bg);border-radius:8px;padding:8px 11px;font-size:12.5px;line-height:1.4;max-width:220px;box-shadow:var(--shadow);pointer-events:none;}
+  .hotspot-tooltip .k{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.06em;opacity:.7;margin-bottom:2px;}
+
+  .detail-type{color:var(--gold);font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;}
   .detail-name{font-size:clamp(26px,4vw,36px);margin:6px 0 4px;}
-  .detail-finish{color:var(--ink-muted);margin:0 0 18px;font-size:15px;}
-  .detail-price{font-family:var(--font-mono);font-size:28px;font-weight:600;margin-bottom:18px;}
-  .detail-blurb{max-width:60ch;color:var(--ink);margin-bottom:26px;font-size:16px;}
+  .detail-brand{color:var(--ink-muted);margin:0 0 18px;font-size:15px;}
+  .detail-blurb{max-width:60ch;color:var(--ink);margin-bottom:22px;font-size:16px;white-space:pre-wrap;}
   .spec-table{width:100%;border-collapse:collapse;margin-bottom:26px;}
   .spec-table tr{border-top:1px solid var(--line);}
   .spec-table tr:first-child{border-top:none;}
   .spec-table th,.spec-table td{text-align:left;padding:10px 0;font-size:14.5px;vertical-align:top;}
   .spec-table th{color:var(--ink-muted);font-weight:600;width:38%;}
   .spec-table td{font-family:var(--font-mono);}
-  .detail-actions{display:flex;flex-wrap:wrap;gap:10px;}
+  .spec-table tr[data-pinned="true"] th{color:var(--accent);}
+  .detail-actions{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:22px;}
   .detail-actions .btn{width:auto;}
+  .owner-card{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:22px;text-decoration:none;cursor:pointer;width:100%;text-align:left;}
+  .owner-card:hover{border-color:var(--accent);}
+  .owner-card .owner-name{font-weight:700;font-size:14.5px;}
+  .owner-card .owner-label{font-size:12px;color:var(--ink-muted);}
+
+  .profile-head{display:flex;gap:20px;align-items:center;margin-bottom:28px;flex-wrap:wrap;}
+  .profile-name{font-size:clamp(24px,4vw,32px);margin:0 0 4px;}
+  .profile-main-instr{color:var(--gold);font-size:13.5px;font-weight:700;letter-spacing:.03em;margin:0 0 8px;}
+  .profile-bio{color:var(--ink);max-width:60ch;margin:0;white-space:pre-wrap;}
+  .profile-actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
+  .profile-actions .btn{width:auto;}
+  .section-label{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);margin:32px 0 4px;}
+
+  .avatar-upload{display:flex;align-items:center;gap:16px;margin-bottom:18px;}
+  .avatar-upload .field{margin:0;flex:1;}
+
+  .specs-editor{display:flex;flex-direction:column;gap:10px;margin-bottom:8px;}
+  .spec-row{display:grid;grid-template-columns:1fr 1fr auto auto;gap:8px;align-items:center;}
+  @media (max-width:600px){.spec-row{grid-template-columns:1fr 1fr;}}
+  .spec-row input{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-size:14px;color:var(--ink);width:100%;}
+  .pin-toggle{background:none;border:1px solid var(--line);border-radius:8px;padding:9px 10px;font-size:13px;cursor:pointer;color:var(--ink-muted);white-space:nowrap;width:auto;}
+  .pin-toggle[data-armed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);}
+  .pin-toggle[data-pinned="true"]:not([data-armed="true"]){border-color:var(--gold);color:var(--gold);}
+  .row-remove{background:none;border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-size:13px;cursor:pointer;color:var(--danger);width:auto;}
+  .photo-preview-wrap{margin-bottom:18px;}
+  .photo-preview-wrap .hotspot-stage{max-width:420px;cursor:crosshair;}
+  .pin-hint{font-size:12.5px;color:var(--ink-muted);margin:8px 0 0;}
+  .form-actions{display:flex;gap:10px;margin-top:20px;}
+  .form-actions .btn{width:auto;}
+
+  .chat-list{display:flex;flex-direction:column;gap:2px;margin-block:20px 56px;}
+  .chat-item{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer;text-align:left;width:100%;margin-bottom:8px;}
+  .chat-item:hover{border-color:var(--accent);}
+  .chat-item-body{flex:1;min-width:0;}
+  .chat-item-name{font-weight:700;font-size:14.5px;margin:0;}
+  .chat-item-preview{font-size:13px;color:var(--ink-muted);margin:2px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .chat-item-time{font-size:11px;color:var(--ink-muted);font-family:var(--font-mono);flex-shrink:0;}
+
+  .chat-window{display:flex;flex-direction:column;height:calc(100dvh - 220px);min-height:420px;border:1px solid var(--line);border-radius:14px;background:var(--surface);overflow:hidden;margin-bottom:40px;}
+  .chat-header{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line);}
+  .chat-header .name{font-weight:700;font-size:14.5px;}
+  .chat-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px;}
+  .msg-row{display:flex;}
+  .msg-row.mine{justify-content:flex-end;}
+  .msg-bubble{max-width:70%;padding:9px 13px;border-radius:14px;font-size:14px;line-height:1.4;background:var(--surface-2);white-space:pre-wrap;word-break:break-word;}
+  .msg-row.mine .msg-bubble{background:var(--accent);color:var(--accent-ink);}
+  .msg-time{display:block;font-size:10px;opacity:.65;margin-top:4px;font-family:var(--font-mono);}
+  .chat-input-row{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line);}
+  .chat-input-row input{flex:1;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 13px;font-size:14.5px;color:var(--ink);}
+  .chat-input-row .btn{width:auto;padding:10px 18px;}
 
   footer{color:var(--ink-muted);font-size:12.5px;text-align:center;padding-block:24px 40px;border-top:1px solid var(--line);}
   footer p{max-width:64ch;margin-inline:auto;}
-  footer .credits{margin-top:8px;font-size:11.5px;line-height:1.7;}
   footer a{text-decoration:underline;text-underline-offset:2px;}
 </style>
 </head>
@@ -165,9 +235,17 @@
 <div id="app" hidden>
   <header class="topbar" id="topbar" hidden>
     <button class="brand" id="brandBtn" type="button">AMPLIFICADO</button>
+    <nav class="navlinks">
+      <a href="#/feed" data-route="feed">Muro</a>
+      <a href="#/new" data-route="new">Publicar</a>
+      <a href="#/chats" data-route="chats">Mensajes</a>
+    </nav>
     <div class="topbar-actions">
-      <span class="user-chip mono" id="userChip"></span>
-      <button class="logout-btn" id="logoutBtn" type="button">Cerrar sesión</button>
+      <button class="user-chip-btn" id="ownProfileBtn" type="button">
+        <span id="ownAvatarSlot"></span>
+        <span class="user-chip mono" id="userChip"></span>
+      </button>
+      <button class="logout-btn" id="logoutBtn" type="button">Salir</button>
     </div>
   </header>
 
@@ -176,7 +254,7 @@
       <div class="login-glow"></div>
       <div class="login-inner">
         <p class="login-mark">AMPLIFIC<em>A</em>DO</p>
-        <p class="login-tagline">Guitarras eléctricas para cada escenario, del garage al foco principal.</p>
+        <p class="login-tagline">La red social de músicos e instrumentos: compartí tu guitarra, tu amplificador o lo que toques, sumá likes y charlá con otros entusiastas.</p>
 
         <div class="auth-tabs" role="tablist">
           <button class="auth-tab" id="tabLogin" type="button" role="tab" aria-selected="true">Iniciar sesión</button>
@@ -195,7 +273,7 @@
           </div>
           <p class="login-error" id="authError" role="alert" aria-live="polite"></p>
           <p class="login-notice" id="authNotice" role="status" aria-live="polite"></p>
-          <button class="btn" type="submit" id="authSubmit">Entrar al catálogo</button>
+          <button class="btn" type="submit" id="authSubmit">Entrar</button>
           <div class="auth-footer-row">
             <button class="btn-link" type="button" id="forgotBtn">¿Olvidaste tu contraseña?</button>
           </div>
@@ -204,301 +282,132 @@
       </div>
     </section>
 
-    <section class="view" id="view-catalog" hidden>
-      <div class="catalog-head">
-        <h1>Catálogo</h1>
-        <p class="catalog-sub mono" id="catalogCount"></p>
-        <div class="filters" id="filters"></div>
+    <section class="view" id="view-feed" hidden>
+      <div class="page-head">
+        <div>
+          <h1>Muro</h1>
+          <p class="page-sub mono" id="feedCount"></p>
+        </div>
+        <button class="btn btn-ghost" type="button" id="feedRefreshBtn">↻ Actualizar</button>
       </div>
+      <div class="filters" id="filters"></div>
+      <div id="feedEmpty"></div>
       <div class="grid" id="grid"></div>
     </section>
 
-    <section class="view" id="view-detail" hidden>
-      <button class="back-btn" id="backBtn" type="button">← Volver al catálogo</button>
+    <section class="view" id="view-new" hidden>
+      <button class="back-btn" type="button" data-nav="#/feed">← Volver al muro</button>
+      <div class="page-head"><div><h1>Publicar instrumento</h1><p class="page-sub">Sumá tu guitarra, bajo, amplificador o lo que toques al muro.</p></div></div>
+      <form class="login-card" id="newForm" novalidate style="max-width:640px;">
+        <div class="field">
+          <label for="instType">Tipo de instrumento</label>
+          <select id="instType">
+            <option value="Guitarra eléctrica">Guitarra eléctrica</option>
+            <option value="Guitarra acústica">Guitarra acústica</option>
+            <option value="Bajo">Bajo</option>
+            <option value="Amplificador">Amplificador</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="instName">Nombre / modelo</label>
+          <input id="instName" type="text" placeholder="Ej: Telecaster custom '72" required />
+        </div>
+        <div class="field">
+          <label for="instBrand">Marca o luthier (opcional)</label>
+          <input id="instBrand" type="text" placeholder="Ej: hecha por Luthier Pérez" />
+        </div>
+        <div class="field">
+          <label for="instPhoto">Foto</label>
+          <input id="instPhoto" type="file" accept="image/*" required />
+          <span class="field-hint">Se ajusta automáticamente para no pesar demasiado.</span>
+        </div>
+        <div class="photo-preview-wrap" id="photoPreviewWrap" hidden></div>
+        <div class="field">
+          <label for="instDesc">Descripción</label>
+          <textarea id="instDesc" placeholder="Contá la historia del instrumento, cómo suena, por qué lo elegiste…"></textarea>
+        </div>
+
+        <label style="font-size:13px;font-weight:600;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.06em;">Especificaciones</label>
+        <p class="field-hint" style="margin:2px 0 12px;">Agregá las que quieras: cuerpo, mástil, diapasón, pastillas, puente, potencia, etc. Después podés anclarlas sobre la foto.</p>
+        <div class="specs-editor" id="specsEditor"></div>
+        <button type="button" class="btn btn-ghost btn-sm" id="addSpecBtn" style="margin-bottom:18px;">+ Agregar especificación</button>
+
+        <div id="pinSection" hidden>
+          <label style="font-size:13px;font-weight:600;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.06em;">Anclar en la foto (opcional)</label>
+          <p class="pin-hint">Tocá "📍" junto a una especificación y después hacé clic en el punto de la foto que corresponde (ej. las pastillas, el mástil).</p>
+        </div>
+
+        <p class="login-error" id="newError" role="alert"></p>
+        <div class="form-actions">
+          <button class="btn" type="submit" id="newSubmit">Publicar</button>
+          <button class="btn btn-ghost" type="button" data-nav="#/feed">Cancelar</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="view" id="view-instrument" hidden>
+      <button class="back-btn" type="button" data-nav="#/feed">← Volver al muro</button>
       <div class="detail" id="detailContent"></div>
+    </section>
+
+    <section class="view" id="view-profile" hidden>
+      <button class="back-btn" type="button" data-nav="#/feed">← Volver al muro</button>
+      <div id="profileContent"></div>
+    </section>
+
+    <section class="view" id="view-profile-edit" hidden>
+      <button class="back-btn" type="button" data-nav="#/feed">← Volver al muro</button>
+      <div class="page-head"><div><h1>Editar perfil</h1></div></div>
+      <form class="login-card" id="editProfileForm" novalidate style="max-width:520px;">
+        <div class="avatar-upload">
+          <span id="editAvatarPreview"></span>
+          <div class="field">
+            <label for="profilePhoto">Foto de perfil</label>
+            <input id="profilePhoto" type="file" accept="image/*" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="profileName">Nombre</label>
+          <input id="profileName" type="text" required />
+        </div>
+        <div class="field">
+          <label for="profileMainInstr">Instrumento principal / favorito</label>
+          <input id="profileMainInstr" type="text" placeholder="Ej: Stratocaster HSS" />
+        </div>
+        <div class="field">
+          <label for="profileBio">Descripción de perfil</label>
+          <textarea id="profileBio" placeholder="Contá algo sobre vos como músico…"></textarea>
+        </div>
+        <p class="login-error" id="editProfileError" role="alert"></p>
+        <p class="login-notice" id="editProfileNotice" role="status"></p>
+        <div class="form-actions">
+          <button class="btn" type="submit" id="editProfileSubmit">Guardar</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="view" id="view-chats" hidden>
+      <div class="page-head"><div><h1>Mensajes</h1></div></div>
+      <div id="chatsContent"></div>
+    </section>
+
+    <section class="view" id="view-chat" hidden>
+      <button class="back-btn" type="button" data-nav="#/chats">← Volver a mensajes</button>
+      <div id="chatContent"></div>
     </section>
   </main>
 
   <footer>
-    <p>Amplificado — catálogo de demostración. Los nombres de modelo, precios y especificaciones son de ejemplo; las fotografías corresponden a instrumentos reales usados como referencia visual de cada familia.</p>
-    <p class="credits">
-      Fotos vía Wikimedia Commons, cortesía de Auge=mit y colaboradores (CC BY-SA 2.5 / 3.0 / 4.0, CC BY 2.0):
-      <a href="https://commons.wikimedia.org/wiki/File:Fender_Stratocaster_Relic_FCS_AvR.png" target="_blank" rel="noopener">Stratocaster</a> ·
-      <a href="https://commons.wikimedia.org/wiki/File:Epiphone_Limited_Edition_Joe_Bonamassa_Les_Paul_Standard_noBG.png" target="_blank" rel="noopener">Les Paul</a> ·
-      <a href="https://commons.wikimedia.org/wiki/File:Peavey_Generation_EXP_Telecaster_Custom_2007.jpg" target="_blank" rel="noopener">Telecaster</a> ·
-      <a href="https://commons.wikimedia.org/wiki/File:Gibson_Flying_V_Classic_White_noBG.png" target="_blank" rel="noopener">Flying V</a> ·
-      <a href="https://commons.wikimedia.org/wiki/File:Gibson-Explorer_noBG.png" target="_blank" rel="noopener">Explorer</a> ·
-      <a href="https://commons.wikimedia.org/wiki/File:Gibson_ES_335_64_GCS_AvR.png" target="_blank" rel="noopener">Semihueca</a>
-    </p>
+    <p>Amplificado — red social de instrumentos. Los perfiles, publicaciones y mensajes son generados por sus usuarios.</p>
   </footer>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
-<script src="catalog-data.js"></script>
-<script>
-(function(){
-  "use strict";
-
-  // ---- auth error messages ----
-  var AUTH_ERRORS = {
-    "auth/email-already-in-use":"Ese email ya tiene una cuenta. Probá iniciar sesión.",
-    "auth/invalid-email":"El email no es válido.",
-    "auth/weak-password":"La contraseña debe tener al menos 6 caracteres.",
-    "auth/user-not-found":"Email o contraseña incorrectos.",
-    "auth/wrong-password":"Email o contraseña incorrectos.",
-    "auth/invalid-credential":"Email o contraseña incorrectos.",
-    "auth/invalid-login-credentials":"Email o contraseña incorrectos.",
-    "auth/too-many-requests":"Demasiados intentos. Probá de nuevo en unos minutos.",
-    "auth/network-request-failed":"Error de conexión. Revisá tu internet e intentá de nuevo.",
-    "auth/missing-password":"Ingresá una contraseña."
-  };
-  function authErrorMessage(err){
-    return AUTH_ERRORS[err && err.code] || "Ocurrió un error. Probá de nuevo.";
-  }
-
-  var boot = document.getElementById("boot");
-  var app = document.getElementById("app");
-  var topbar = document.getElementById("topbar");
-  var brandBtn = document.getElementById("brandBtn");
-  var userChip = document.getElementById("userChip");
-  var logoutBtn = document.getElementById("logoutBtn");
-  var views = {
-    login: document.getElementById("view-login"),
-    catalog: document.getElementById("view-catalog"),
-    detail: document.getElementById("view-detail")
-  };
-
-  function showView(name){
-    Object.keys(views).forEach(function(k){ views[k].hidden = (k !== name); });
-    topbar.hidden = (name === "login");
-    window.scrollTo(0,0);
-  }
-
-  // ---- auth form (login / signup tabs) ----
-  var tabLogin = document.getElementById("tabLogin");
-  var tabSignup = document.getElementById("tabSignup");
-  var authForm = document.getElementById("authForm");
-  var authSubmit = document.getElementById("authSubmit");
-  var authError = document.getElementById("authError");
-  var authNotice = document.getElementById("authNotice");
-  var passHint = document.getElementById("passHint");
-  var forgotBtn = document.getElementById("forgotBtn");
-  var mode = "login";
-
-  function setMode(next){
-    mode = next;
-    tabLogin.setAttribute("aria-selected", String(mode === "login"));
-    tabSignup.setAttribute("aria-selected", String(mode === "signup"));
-    authSubmit.textContent = mode === "login" ? "Entrar al catálogo" : "Crear cuenta";
-    passHint.hidden = mode === "login";
-    authError.textContent = "";
-    authNotice.textContent = "";
-  }
-  tabLogin.addEventListener("click", function(){ setMode("login"); });
-  tabSignup.addEventListener("click", function(){ setMode("signup"); });
-
-  authForm.addEventListener("submit", function(e){
-    e.preventDefault();
-    var email = document.getElementById("emailField").value.trim();
-    var pass = document.getElementById("passField").value;
-    authError.textContent = "";
-    authNotice.textContent = "";
-    if(!email || !pass){
-      authError.textContent = "Completá email y contraseña.";
-      return;
-    }
-    authSubmit.disabled = true;
-    var action = mode === "login"
-      ? firebase.auth().signInWithEmailAndPassword(email, pass)
-      : firebase.auth().createUserWithEmailAndPassword(email, pass);
-    action.catch(function(err){
-      authError.textContent = authErrorMessage(err);
-    }).finally(function(){
-      authSubmit.disabled = false;
-    });
-  });
-
-  forgotBtn.addEventListener("click", function(){
-    var email = document.getElementById("emailField").value.trim();
-    authError.textContent = "";
-    authNotice.textContent = "";
-    if(!email){
-      authError.textContent = "Escribí tu email arriba y volvé a tocar este link.";
-      return;
-    }
-    firebase.auth().sendPasswordResetEmail(email).then(function(){
-      authNotice.textContent = "Te enviamos un email para restablecer tu contraseña.";
-    }).catch(function(err){
-      authError.textContent = authErrorMessage(err);
-    });
-  });
-
-  logoutBtn.addEventListener("click", function(){
-    firebase.auth().signOut();
-  });
-
-  brandBtn.addEventListener("click", function(){
-    renderGrid();
-    showView("catalog");
-  });
-
-  firebase.auth().onAuthStateChanged(function(user){
-    boot.hidden = true;
-    app.hidden = false;
-    if(user){
-      userChip.textContent = user.email;
-      renderFilters();
-      renderGrid();
-      showView("catalog");
-    } else {
-      showView("login");
-    }
-  });
-
-  // ---- catalog ----
-  var favorites = loadFavorites();
-  function loadFavorites(){
-    try{
-      var raw = localStorage.getItem("amplificado_favoritos");
-      return raw ? JSON.parse(raw) : [];
-    }catch(e){ return []; }
-  }
-  function saveFavorites(){
-    try{ localStorage.setItem("amplificado_favoritos", JSON.stringify(favorites)); }catch(e){}
-  }
-  function toggleFavorite(id){
-    var idx = favorites.indexOf(id);
-    if(idx === -1) favorites.push(id); else favorites.splice(idx,1);
-    saveFavorites();
-  }
-
-  var PHOTO_BY_SHAPE = {
-    strat:"img/strat.png", lp:"img/lp.png", tele:"img/tele.jpg",
-    v:"img/v.png", explorer:"img/explorer.png", semihollow:"img/semihollow.png"
-  };
-  function artImg(g){
-    return '<img src="' + PHOTO_BY_SHAPE[g.shape] + '" alt="' + g.name + ', ' + g.family + ' ' + g.acabado + '" loading="lazy" />';
-  }
-
-  var state = { family:"all", activeId:null };
-  var filtersEl = document.getElementById("filters");
-  var gridEl = document.getElementById("grid");
-  var countEl = document.getElementById("catalogCount");
-
-  function families(){
-    var seen = [], list = [];
-    guitars.forEach(function(g){
-      if(seen.indexOf(g.family) === -1){ seen.push(g.family); list.push(g.family); }
-    });
-    return list;
-  }
-
-  function renderFilters(){
-    var chips = ["all"].concat(families());
-    filtersEl.innerHTML = chips.map(function(f){
-      var label = f === "all" ? "Todas" : f;
-      var pressed = state.family === f;
-      return '<button type="button" class="chip" data-family="' + f + '" aria-pressed="' + pressed + '">' + label + '</button>';
-    }).join("");
-    Array.prototype.forEach.call(filtersEl.querySelectorAll(".chip"), function(btn){
-      btn.addEventListener("click", function(){
-        state.family = btn.getAttribute("data-family");
-        renderFilters();
-        renderGrid();
-      });
-    });
-  }
-
-  function renderGrid(){
-    var list = guitars.filter(function(g){ return state.family === "all" || g.family === state.family; });
-    countEl.textContent = list.length + (list.length === 1 ? " modelo disponible" : " modelos disponibles");
-    if(list.length === 0){
-      gridEl.innerHTML = '<p class="empty-state">No hay modelos en esta categoría todavía.</p>';
-      return;
-    }
-    gridEl.innerHTML = list.map(function(g){
-      var isFav = favorites.indexOf(g.id) !== -1;
-      return '' +
-        '<article class="card" data-id="' + g.id + '" tabindex="0" role="button" aria-label="Ver ficha de ' + g.name + '">' +
-          '<div class="card-art">' +
-            artImg(g) +
-            '<button type="button" class="fav-toggle" data-fav-id="' + g.id + '" data-fav="' + isFav + '" aria-label="Marcar ' + g.name + ' como favorita" aria-pressed="' + isFav + '">' + (isFav ? "★" : "☆") + '</button>' +
-          '</div>' +
-          '<div class="card-body">' +
-            '<div class="card-tags">' +
-              '<span class="card-family">' + g.family + '</span>' +
-              '<span class="tier-pill" data-tier="' + g.nivel + '">' + g.nivel + '</span>' +
-            '</div>' +
-            '<h3 class="card-name">' + g.name + '</h3>' +
-            '<p class="card-blurb">' + g.blurb + '</p>' +
-            '<div class="card-foot">' +
-              '<span class="card-price mono">$' + g.price.toLocaleString("es-AR") + '</span>' +
-              '<span class="card-cta">Ver ficha →</span>' +
-            '</div>' +
-          '</div>' +
-        '</article>';
-    }).join("");
-
-    Array.prototype.forEach.call(gridEl.querySelectorAll(".card"), function(card){
-      card.addEventListener("click", function(e){
-        if(e.target.closest(".fav-toggle")) return;
-        openDetail(card.getAttribute("data-id"));
-      });
-      card.addEventListener("keydown", function(e){
-        if((e.key === "Enter" || e.key === " ") && !e.target.closest(".fav-toggle")){
-          e.preventDefault();
-          openDetail(card.getAttribute("data-id"));
-        }
-      });
-    });
-    Array.prototype.forEach.call(gridEl.querySelectorAll(".fav-toggle"), function(btn){
-      btn.addEventListener("click", function(e){
-        e.stopPropagation();
-        var id = btn.getAttribute("data-fav-id");
-        toggleFavorite(id);
-        renderGrid();
-      });
-    });
-  }
-
-  var detailContent = document.getElementById("detailContent");
-  var backBtn = document.getElementById("backBtn");
-  backBtn.addEventListener("click", function(){ renderGrid(); showView("catalog"); });
-
-  function openDetail(id){
-    var g = guitars.filter(function(x){ return x.id === id; })[0];
-    if(!g) return;
-    state.activeId = id;
-    var isFav = favorites.indexOf(id) !== -1;
-    var rows = [
-      ["Cuerpo", g.cuerpo], ["Mástil", g.mastil], ["Diapasón", g.diapason],
-      ["Pastillas", g.pastillas], ["Puente", g.puente], ["Escala", g.escala],
-      ["Trastes", g.trastes], ["Acabado", g.acabado]
-    ];
-    detailContent.innerHTML = '' +
-      '<div class="detail-art">' + artImg(g) + '</div>' +
-      '<div class="detail-info">' +
-        '<span class="detail-family">' + g.family + '<span class="tier-pill detail-tier" data-tier="' + g.nivel + '">' + g.nivel + '</span></span>' +
-        '<h1 class="detail-name">' + g.name + '</h1>' +
-        '<p class="detail-finish">' + g.acabado + '</p>' +
-        '<p class="detail-price mono">$' + g.price.toLocaleString("es-AR") + '</p>' +
-        '<p class="detail-blurb">' + g.blurb + '</p>' +
-        '<table class="spec-table">' +
-          rows.map(function(r){ return '<tr><th>' + r[0] + '</th><td>' + r[1] + '</td></tr>'; }).join("") +
-        '</table>' +
-        '<div class="detail-actions">' +
-          '<button type="button" class="btn btn-ghost" id="favBtn" aria-pressed="' + isFav + '">' + (isFav ? "★ En favoritos" : "☆ Guardar en favoritos") + '</button>' +
-        '</div>' +
-      '</div>';
-    document.getElementById("favBtn").addEventListener("click", function(){
-      toggleFavorite(id);
-      openDetail(id);
-    });
-    showView("detail");
-  }
-})();
-</script>
+<script src="seed-data.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
