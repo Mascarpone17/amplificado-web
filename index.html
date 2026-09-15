@@ -493,8 +493,8 @@
     </section>
 
     <section class="view" id="view-band-new" hidden>
-      <button class="back-btn" type="button" data-nav="#/bands">← Volver a bandas</button>
-      <div class="page-head"><div><h1>Crear banda</h1><p class="page-sub">Armá la página de tu banda o proyecto musical.</p></div></div>
+      <button class="back-btn" type="button" id="bandFormBackBtn" data-nav="#/bands">← Volver a bandas</button>
+      <div class="page-head"><div><h1 id="bandFormTitle">Crear banda</h1><p class="page-sub" id="bandFormSub">Armá la página de tu banda o proyecto musical.</p></div></div>
       <form class="login-card" id="bandForm" novalidate style="max-width:640px;">
         <div class="field">
           <label for="bandName">Nombre de la banda</label>
@@ -532,7 +532,7 @@
         <p class="login-error" id="bandError" role="alert"></p>
         <div class="form-actions">
           <button class="btn" type="submit" id="bandSubmit">Publicar banda</button>
-          <button class="btn btn-ghost" type="button" data-nav="#/bands">Cancelar</button>
+          <button class="btn btn-ghost" type="button" id="bandFormCancelBtn" data-nav="#/bands">Cancelar</button>
         </div>
       </form>
     </section>

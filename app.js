@@ -265,6 +265,7 @@
     if(parts[0] === "chat" && parts[1]){ showView("chat"); renderChatWindow(parts[1]); return; }
     if(parts[0] === "bands" && parts[1] === "new"){ showView("bandNew"); resetBandForm(); return; }
     if(parts[0] === "bands"){ showView("bands"); renderBandsFeed(); return; }
+    if(parts[0] === "band" && parts[1] && parts[2] === "edit"){ showView("bandNew"); loadBandForEdit(parts[1]); return; }
     if(parts[0] === "band" && parts[1]){ showView("band"); renderBandDetail(parts[1]); return; }
 
     location.hash = "#/feed";
@@ -941,9 +942,11 @@
   var bandLinks = [];
   var bandShows = [];
   var bandPhotoData = "";
+  var editingBandId = null;
 
   function resetBandForm(){
     bandForm.reset();
+    editingBandId = null;
     bandMembers = [{ name: "", lookup: "" }];
     bandLinks = [{ platform: "", url: "" }];
     bandShows = [{ date: "", location: "", ticketUrl: "" }];
@@ -951,9 +954,61 @@
     bandPhotoPreview.hidden = true;
     bandPhotoPreview.innerHTML = "";
     bandError.textContent = "";
+    bandPhotoInput.required = true;
+    document.getElementById("bandFormTitle").textContent = "Crear banda";
+    document.getElementById("bandFormSub").textContent = "Armá la página de tu banda o proyecto musical.";
+    bandSubmit.textContent = "Publicar banda";
+    document.getElementById("bandFormBackBtn").setAttribute("data-nav", "#/bands");
+    document.getElementById("bandFormCancelBtn").setAttribute("data-nav", "#/bands");
     renderMembersEditor();
     renderLinksEditor();
     renderShowsEditor();
+  }
+
+  function loadBandForEdit(id){
+    bandForm.reset();
+    editingBandId = id;
+    bandError.textContent = "";
+    bandPhotoInput.required = false;
+    document.getElementById("bandFormTitle").textContent = "Editar banda";
+    document.getElementById("bandFormSub").textContent = "Actualizá integrantes, redes y próximas fechas.";
+    bandSubmit.textContent = "Guardar cambios";
+    document.getElementById("bandFormBackBtn").setAttribute("data-nav", "#/band/" + id);
+    document.getElementById("bandFormCancelBtn").setAttribute("data-nav", "#/band/" + id);
+
+    db.collection("bands").doc(id).get().then(function(snap){
+      if(!snap.exists){ location.hash = "#/bands"; return; }
+      var b = snap.data();
+      if(b.ownerId !== currentUser.uid){ location.hash = "#/band/" + id; return; }
+
+      document.getElementById("bandName").value = b.name || "";
+      document.getElementById("bandGenre").value = b.genre || "";
+      document.getElementById("bandDesc").value = b.description || "";
+      bandPhotoData = b.photoData || "";
+      if(bandPhotoData){
+        bandPhotoPreview.hidden = false;
+        bandPhotoPreview.innerHTML = '<div class="hotspot-stage"><img src="' + bandPhotoData + '" alt="" /></div>';
+      }
+
+      var memberFetches = (b.members || []).map(function(m){
+        if(m.profileUid){
+          return getProfile(m.profileUid).then(function(p){ return { name: m.name || "", lookup: p.displayName || "" }; });
+        }
+        return Promise.resolve({ name: m.name || "", lookup: "" });
+      });
+      return Promise.all(memberFetches).then(function(resolved){
+        bandMembers = resolved.length ? resolved : [{ name: "", lookup: "" }];
+        bandLinks = (b.links || []).map(function(l){ return { platform: l.platform || "", url: l.url || "" }; });
+        if(bandLinks.length === 0) bandLinks = [{ platform: "", url: "" }];
+        bandShows = (b.shows || []).map(function(s){ return { date: s.date || "", location: s.location || "", ticketUrl: s.ticketUrl || "" }; });
+        if(bandShows.length === 0) bandShows = [{ date: "", location: "", ticketUrl: "" }];
+        renderMembersEditor();
+        renderLinksEditor();
+        renderShowsEditor();
+      });
+    }).catch(function(err){
+      bandError.textContent = err.message || "No se pudo cargar la banda.";
+    });
   }
 
   function renderMembersEditor(){
@@ -1057,28 +1112,34 @@
     var finalShows = bandShows.filter(function(s){ return s.date && s.location.trim(); })
       .map(function(s){ return { date: s.date, location: s.location.trim(), ticketUrl: (s.ticketUrl || "").trim() }; });
 
+    var isEdit = !!editingBandId;
     bandSubmit.disabled = true;
-    bandSubmit.textContent = "Publicando…";
+    bandSubmit.textContent = isEdit ? "Guardando…" : "Publicando…";
     Promise.all(memberPromises).then(function(finalMembers){
-      return db.collection("bands").add({
-        ownerId: currentUser.uid,
-        ownerName: (myProfile && myProfile.displayName) || currentUser.email,
+      var payload = {
         name: name,
         genre: genre,
-        photoData: bandPhotoData,
         description: description,
         members: finalMembers,
         links: finalLinks,
-        shows: finalShows,
-        createdAt: FieldValue.serverTimestamp()
-      });
-    }).then(function(ref){
-      location.hash = "#/band/" + ref.id;
+        shows: finalShows
+      };
+      if(bandPhotoData) payload.photoData = bandPhotoData;
+      if(isEdit){
+        return db.collection("bands").doc(editingBandId).update(payload).then(function(){ return editingBandId; });
+      }
+      payload.ownerId = currentUser.uid;
+      payload.ownerName = (myProfile && myProfile.displayName) || currentUser.email;
+      payload.photoData = bandPhotoData;
+      payload.createdAt = FieldValue.serverTimestamp();
+      return db.collection("bands").add(payload).then(function(ref){ return ref.id; });
+    }).then(function(id){
+      location.hash = "#/band/" + id;
     }).catch(function(err){
-      bandError.textContent = err.message || "No se pudo publicar la banda.";
+      bandError.textContent = err.message || "No se pudo guardar la banda.";
     }).finally(function(){
       bandSubmit.disabled = false;
-      bandSubmit.textContent = "Publicar banda";
+      bandSubmit.textContent = isEdit ? "Guardar cambios" : "Publicar banda";
     });
   });
 
@@ -1170,6 +1231,7 @@
           '<span class="detail-type">' + escapeHtml(b.genre || "Banda") + '</span>' +
           '<h1 class="detail-name">' + escapeHtml(b.name) + '</h1>' +
           '<div class="detail-actions">' +
+            (b.ownerId === currentUser.uid ? '<button type="button" class="btn btn-ghost" id="bandEditBtn">Editar banda</button>' : '') +
             (canDelete ? '<button type="button" class="btn-danger-ghost" id="bandDeleteBtn">🗑 Borrar</button>' : '') +
           '</div>' +
           (b.description ? '<p class="detail-blurb">' + escapeHtml(b.description) + '</p>' : '') +
@@ -1182,6 +1244,8 @@
           '</button>' +
         '</div>';
 
+      var editBtn = document.getElementById("bandEditBtn");
+      if(editBtn) editBtn.addEventListener("click", function(){ location.hash = "#/band/" + b.id + "/edit"; });
       var deleteBtn = document.getElementById("bandDeleteBtn");
       if(deleteBtn) deleteBtn.addEventListener("click", function(){
         if(!confirm("¿Borrar esta banda? No se puede deshacer.")) return;

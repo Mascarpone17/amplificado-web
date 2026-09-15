@@ -121,6 +121,6 @@ recargá la página.
 ## Notas
 
 - El `apiKey` de Firebase que va en `firebase-config.js` **no es secreto** — está diseñado para viajar en el código del cliente. La seguridad real la dan las reglas de Firestore (`firestore.rules`) y el dominio autorizado, no ocultar esa clave.
-- No hay edición de instrumentos ni bandas publicadas todavía (solo borrado) — es una base para seguir iterando.
+- Las bandas se pueden editar (el creador puede actualizar integrantes, redes y fechas desde "Editar banda" en la ficha). Los instrumentos todavía no tienen edición, solo borrado.
 - El vínculo de un integrante de banda a su perfil de Amplificado se resuelve por coincidencia exacta de nombre de usuario al publicar; si hay dos cuentas con el mismo nombre puede enlazar la incorrecta.
 - Los datos del catálogo de ejemplo (`seed-data.js`) son de demostración; se publican bajo un usuario ficticio "Amplificado Demo".
