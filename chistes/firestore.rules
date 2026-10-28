@@ -1,0 +1,72 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // Cuenta admin (moderación: puede borrar cualquier chiste).
+    function isAdmin() {
+      return signedIn() && request.auth.token.email == 'reyesblas200910@gmail.com';
+    }
+
+    // Deben coincidir con LANGS y CATEGORIES en app.js.
+    function validLang(l) {
+      return l in ['es', 'en', 'pt', 'fr', 'it', 'de', 'ca', 'gl', 'eu', 'nl', 'ru', 'pl', 'tr', 'ar', 'he', 'hi', 'zh', 'ja', 'ko', 'otro'];
+    }
+    function validCategory(c) {
+      return c in ['palabras', 'absurdo', 'colmos', 'toctoc', 'medicos', 'escuela', 'bares',
+                   'animales', 'tecnologia', 'familia', 'profesiones', 'humor-negro', 'otros'];
+    }
+
+    // Autores: perfiles públicos (cualquiera puede leerlos, incluso sin cuenta).
+    // Cada persona crea y edita solo el suyo.
+    match /users/{uid} {
+      allow read: if true;
+      allow create, update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() > 0
+        && request.resource.data.displayName.size() <= 60;
+      allow delete: if false;
+    }
+
+    // Chistes registrados. Lectura pública.
+    // Al crear: el autor tiene que ser quien publica, la fecha tiene que ser la
+    // del servidor (no se puede antedatar un registro), y en el mismo batch se
+    // tiene que crear su huella en /huellas — así un texto idéntico no se puede
+    // registrar dos veces.
+    // El texto no se puede editar nunca: solo cambia el contador de risas (de a 1).
+    match /jokes/{id} {
+      allow read: if true;
+      allow create: if signedIn()
+        && request.resource.data.authorId == request.auth.uid
+        && request.resource.data.laughs == 0
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 2000
+        && validLang(request.resource.data.lang)
+        && validCategory(request.resource.data.category)
+        && request.resource.data.fingerprint is string
+        && getAfter(/databases/$(database)/documents/huellas/$(request.resource.data.fingerprint)).data.jokeId == id;
+      allow update: if signedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['laughs'])
+        && (request.resource.data.laughs == resource.data.laughs + 1
+            || request.resource.data.laughs == resource.data.laughs - 1);
+      allow delete: if signedIn() && (request.auth.uid == resource.data.authorId || isAdmin());
+    }
+
+    // Huellas: hash del texto normalizado de cada chiste -> qué chiste lo registró.
+    // Solo se pueden crear (crear sobre una huella existente cuenta como update,
+    // que está prohibido): el primero que registra un texto se lo queda.
+    match /huellas/{fp} {
+      allow read: if true;
+      allow create: if signedIn()
+        && request.resource.data.authorId == request.auth.uid
+        && getAfter(/databases/$(database)/documents/jokes/$(request.resource.data.jokeId)).data.fingerprint == fp;
+      allow update: if false;
+      allow delete: if signedIn() && (request.auth.uid == resource.data.authorId || isAdmin());
+    }
+  }
+}
